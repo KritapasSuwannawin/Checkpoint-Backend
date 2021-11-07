@@ -2,7 +2,7 @@ const postgresql = require('../postgresql/postgresql');
 
 exports.getResource = (req, res) => {
   const ambientPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM ambient;', (err, result) => {
+    postgresql.query('SELECT * FROM ambient ORDER BY id;', (err, result) => {
       resolve(
         result
           ? result.rows.map((ambient) => {
@@ -20,7 +20,7 @@ exports.getResource = (req, res) => {
   });
 
   const backgroundPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM background;', (err, result) => {
+    postgresql.query('SELECT * FROM background ORDER BY id;', (err, result) => {
       resolve(
         result
           ? result.rows.map((background) => {
@@ -37,7 +37,7 @@ exports.getResource = (req, res) => {
   });
 
   const musicPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM music;', (err, result) => {
+    postgresql.query('SELECT * FROM music ORDER BY id;', (err, result) => {
       resolve(
         result
           ? result.rows.map((music) => {
@@ -47,6 +47,7 @@ exports.getResource = (req, res) => {
                 artistName: music.artist_name,
                 filePath: music.file_path,
                 thumbnailFilePath: music.thumbnail_file_path,
+                category: music.category,
               };
             })
           : err
