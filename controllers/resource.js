@@ -28,7 +28,7 @@ exports.getResource = (req, res) => {
                 id: background.id,
                 filePath: background.file_path,
                 thumbnailFilePath: background.thumbnail_file_path,
-                ambientArr: background.ambient_arr,
+                ambientIdArr: background.ambient_id_arr,
               };
             })
           : err
@@ -37,22 +37,25 @@ exports.getResource = (req, res) => {
   });
 
   const musicPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM music ORDER BY id;', (err, result) => {
-      resolve(
-        result
-          ? result.rows.map((music) => {
-              return {
-                id: music.id,
-                musicName: music.music_name,
-                artistName: music.artist_name,
-                filePath: music.file_path,
-                thumbnailFilePath: music.thumbnail_file_path,
-                category: music.category,
-              };
-            })
-          : err
-      );
-    });
+    postgresql.query(
+      'SELECT m.*, mc.name AS category_name FROM music m INNER JOIN music_category mc ON m.category_id = mc.id ORDER BY m.id;',
+      (err, result) => {
+        resolve(
+          result
+            ? result.rows.map((music) => {
+                return {
+                  id: music.id,
+                  musicName: music.music_name,
+                  artistName: music.artist_name,
+                  filePath: music.file_path,
+                  thumbnailFilePath: music.thumbnail_file_path,
+                  category: music.category_name,
+                };
+              })
+            : err
+        );
+      }
+    );
   });
 
   Promise.all([ambientPromise, backgroundPromise, musicPromise]).then((values) => {
