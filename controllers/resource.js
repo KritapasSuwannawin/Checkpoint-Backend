@@ -50,6 +50,7 @@ exports.getResource = (req, res) => {
                   filePath: music.file_path,
                   thumbnailFilePath: music.thumbnail_file_path,
                   category: music.category_name,
+                  isPremium: music.is_premium,
                 };
               })
             : err

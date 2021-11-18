@@ -117,3 +117,19 @@ exports.memberLogin = (req, res) => {
     }
   });
 };
+
+exports.memberUpgrade = (req, res) => {
+  const memberId = req.body.memberId;
+
+  postgresql.query(`UPDATE member SET member_type_id = 2 WHERE id = ${memberId};`, (err, result) => {
+    if (!err) {
+      res.json({
+        result,
+      });
+    } else {
+      res.json({
+        message: 'error during upgrading to premium',
+      });
+    }
+  });
+};
