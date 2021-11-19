@@ -45,7 +45,16 @@ exports.memberLogin = (req, res) => {
         );
       });
 
-      Promise.all([insertMemberAuthenticationPromise, insertMemberPromise]).then(() => {
+      const insertMemberSettingPromise = new Promise((resolve, reject) => {
+        postgresql.query(
+          'INSERT INTO member_setting (background_id, music_id, music_category_id) values ("0111", 1, NULL);',
+          (err, result) => {
+            resolve(result ? result : err);
+          }
+        );
+      });
+
+      Promise.all([insertMemberAuthenticationPromise, insertMemberPromise, insertMemberSettingPromise]).then(() => {
         const selectMemberPromise = new Promise((resolve, reject) => {
           postgresql.query(
             `SELECT m.*, mt.name AS member_type FROM member m 
@@ -83,8 +92,11 @@ exports.memberLogin = (req, res) => {
       } else {
         const selectMemberPromise = new Promise((resolve, reject) => {
           postgresql.query(
-            `SELECT m.*, mt.name AS member_type FROM member m 
+            `SELECT m.*, mt.name AS member_type, ms.background_id, ms.music_id, ms.music_category_id, mc.name AS music_category
+            FROM member m 
             INNER JOIN member_type mt ON m.member_type_id = mt.id
+            INNER JOIN member_setting ms ON m.id = ms.id
+            LEFT JOIN music_category mc ON ms.music_category_id = mc.id
             WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = '${password}' AND login_method = '${loginMethod}');`,
             (err, result) => {
               resolve(
@@ -96,6 +108,10 @@ exports.memberLogin = (req, res) => {
                         memberTypeId: member.member_type_id,
                         avatarId: member.avatar_id,
                         memberType: member.member_type,
+                        backgroundId: member.background_id,
+                        musicId: member.music_id,
+                        musicCategoryId: member.music_category_id,
+                        musicCategory: member.music_category,
                       };
                     })
                   : err
@@ -132,4 +148,18 @@ exports.memberUpgrade = (req, res) => {
       });
     }
   });
+};
+
+exports.memberSetting = (req, res) => {
+  const backgroundId = req.body.backgroundId;
+  const musicId = req.body.musicId;
+  const musicCategory = req.body.musicCategory;
+  const memberId = req.body.memberId;
+
+  postgresql.query(
+    `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}') WHERE id = ${memberId};`,
+    (err, result) => {
+      res.json({});
+    }
+  );
 };
