@@ -29,7 +29,7 @@ exports.memberLogin = (req, res) => {
     if (data.length === 0) {
       const insertMemberAuthenticationPromise = new Promise((resolve, reject) => {
         postgresql.query(
-          `INSERT INTO member_authentication (email, password, login_method) values ('${email}', '${password}', '${loginMethod}');`,
+          `INSERT INTO member_authentication (email, password, login_method) values ('${email}', MD5('${password}'), '${loginMethod}');`,
           (err, result) => {
             resolve(result ? result : err);
           }
@@ -47,7 +47,7 @@ exports.memberLogin = (req, res) => {
 
       const insertMemberSettingPromise = new Promise((resolve, reject) => {
         postgresql.query(
-          'INSERT INTO member_setting (background_id, music_id, music_category_id) values ("0111", 1, NULL);',
+          "INSERT INTO member_setting (background_id, music_id, music_category_id) values ('0111', 1, NULL);",
           (err, result) => {
             resolve(result ? result : err);
           }
@@ -59,7 +59,7 @@ exports.memberLogin = (req, res) => {
           postgresql.query(
             `SELECT m.*, mt.name AS member_type FROM member m 
             INNER JOIN member_type mt ON m.member_type_id = mt.id
-            WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = '${password}' AND login_method = '${loginMethod}');`,
+            WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
             (err, result) => {
               resolve(
                 result
@@ -85,47 +85,56 @@ exports.memberLogin = (req, res) => {
         });
       });
     } else if (data.length === 1) {
-      if (password !== data[0].password) {
-        res.json({
-          message: 'invalid password',
-        });
-      } else {
-        const selectMemberPromise = new Promise((resolve, reject) => {
-          postgresql.query(
-            `SELECT m.*, mt.name AS member_type, ms.background_id, ms.music_id, ms.music_category_id, mc.name AS music_category
-            FROM member m 
-            INNER JOIN member_type mt ON m.member_type_id = mt.id
-            INNER JOIN member_setting ms ON m.id = ms.id
-            LEFT JOIN music_category mc ON ms.music_category_id = mc.id
-            WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = '${password}' AND login_method = '${loginMethod}');`,
-            (err, result) => {
-              resolve(
-                result
-                  ? result.rows.map((member) => {
-                      return {
-                        id: member.id,
-                        username: member.username,
-                        memberTypeId: member.member_type_id,
-                        avatarId: member.avatar_id,
-                        memberType: member.member_type,
-                        backgroundId: member.background_id,
-                        musicId: member.music_id,
-                        musicCategoryId: member.music_category_id,
-                        musicCategory: member.music_category,
-                      };
-                    })
-                  : err
+      postgresql.query(`SELECT MD5('${password}')`, (err, result) => {
+        if (result) {
+          const encryptedPassword = result.rows[0].md5;
+          if (encryptedPassword !== data[0].password) {
+            res.json({
+              message: 'invalid password',
+            });
+          } else {
+            const selectMemberPromise = new Promise((resolve, reject) => {
+              postgresql.query(
+                `SELECT m.*, mt.name AS member_type, ms.background_id, ms.music_id, ms.music_category_id, mc.name AS music_category
+                FROM member m 
+                INNER JOIN member_type mt ON m.member_type_id = mt.id
+                INNER JOIN member_setting ms ON m.id = ms.id
+                LEFT JOIN music_category mc ON ms.music_category_id = mc.id
+                WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = '${encryptedPassword}' AND login_method = '${loginMethod}');`,
+                (err, result) => {
+                  resolve(
+                    result
+                      ? result.rows.map((member) => {
+                          return {
+                            id: member.id,
+                            username: member.username,
+                            memberTypeId: member.member_type_id,
+                            avatarId: member.avatar_id,
+                            memberType: member.member_type,
+                            backgroundId: member.background_id,
+                            musicId: member.music_id,
+                            musicCategoryId: member.music_category_id,
+                            musicCategory: member.music_category,
+                          };
+                        })
+                      : err
+                  );
+                }
               );
-            }
-          );
-        });
+            });
 
-        selectMemberPromise.then((data) => {
+            selectMemberPromise.then((data) => {
+              res.json({
+                data,
+              });
+            });
+          }
+        } else {
           res.json({
-            data,
+            message: 'error during authentication',
           });
-        });
-      }
+        }
+      });
     } else {
       res.json({
         message: 'error during authentication',
