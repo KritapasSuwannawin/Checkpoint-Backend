@@ -47,7 +47,7 @@ exports.memberLogin = (req, res) => {
 
       const insertMemberSettingPromise = new Promise((resolve, reject) => {
         postgresql.query(
-          "INSERT INTO member_setting (background_id, music_id, music_category_id) values ('0111', 1, NULL);",
+          "INSERT INTO member_setting (background_id, music_id, music_category_id, favourite_music_id_arr, play_from_playlist) values ('0111', 1, NULL, ARRAY[]::integer[], FALSE);",
           (err, result) => {
             resolve(result ? result : err);
           }
@@ -93,7 +93,7 @@ exports.memberLogin = (req, res) => {
           } else {
             const selectMemberPromise = new Promise((resolve, reject) => {
               postgresql.query(
-                `SELECT m.*, ms.background_id, ms.music_id, ms.music_category_id, mc.name AS music_category
+                `SELECT m.*, ms.background_id, ms.music_id, ms.music_category_id, ms.favourite_music_id_arr, ms.play_from_playlist, mc.name AS music_category
                 FROM member m 
                 INNER JOIN member_setting ms ON m.id = ms.id
                 LEFT JOIN music_category mc ON ms.music_category_id = mc.id
@@ -111,6 +111,8 @@ exports.memberLogin = (req, res) => {
                             musicId: member.music_id,
                             musicCategoryId: member.music_category_id,
                             musicCategory: member.music_category,
+                            favouriteMusicIdArr: member.favourite_music_id_arr,
+                            playFromPlaylist: member.play_from_playlist,
                           };
                         })
                       : err
@@ -160,9 +162,11 @@ exports.memberSetting = (req, res) => {
   const musicId = req.body.musicId;
   const musicCategory = req.body.musicCategory;
   const memberId = req.body.memberId;
+  const favouriteMusicIdArr = req.body.favouriteMusicIdArr;
+  const playFromPlaylist = req.body.playFromPlaylist;
 
   postgresql.query(
-    `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}') WHERE id = ${memberId};`,
+    `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
     (err, result) => {
       res.json({});
     }
