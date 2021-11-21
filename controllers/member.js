@@ -27,34 +27,16 @@ exports.memberLogin = (req, res) => {
 
   selectMemberAuthenticationPromise.then((data) => {
     if (data.length === 0) {
-      const insertMemberAuthenticationPromise = new Promise((resolve, reject) => {
+      const addNewMemberPromise = new Promise((resolve, reject) => {
         postgresql.query(
-          `INSERT INTO member_authentication (email, password, login_method) values ('${email}', MD5('${password}'), '${loginMethod}');`,
+          `CALL add_new_member('${email}', '${password}', '${loginMethod}', '${email.split('@')[0]}')`,
           (err, result) => {
             resolve(result ? result : err);
           }
         );
       });
 
-      const insertMemberPromise = new Promise((resolve, reject) => {
-        postgresql.query(
-          `INSERT INTO member (username, avatar_id, is_premium) values ('${email.split('@')[0]}', 1, FALSE);`,
-          (err, result) => {
-            resolve(result ? result : err);
-          }
-        );
-      });
-
-      const insertMemberSettingPromise = new Promise((resolve, reject) => {
-        postgresql.query(
-          "INSERT INTO member_setting (background_id, music_id, music_category_id, favourite_music_id_arr, play_from_playlist) values ('0111', 1, NULL, ARRAY[]::integer[], FALSE);",
-          (err, result) => {
-            resolve(result ? result : err);
-          }
-        );
-      });
-
-      Promise.all([insertMemberAuthenticationPromise, insertMemberPromise, insertMemberSettingPromise]).then(() => {
+      addNewMemberPromise.then(() => {
         const selectMemberPromise = new Promise((resolve, reject) => {
           postgresql.query(
             `SELECT * FROM member m
@@ -83,56 +65,58 @@ exports.memberLogin = (req, res) => {
         });
       });
     } else if (data.length === 1) {
-      postgresql.query(`SELECT MD5('${password}')`, (err, result) => {
-        if (result) {
-          const encryptedPassword = result.rows[0].md5;
-          if (encryptedPassword !== data[0].password) {
-            res.json({
-              message: 'invalid password',
-            });
-          } else {
-            const selectMemberPromise = new Promise((resolve, reject) => {
-              postgresql.query(
-                `SELECT m.*, ms.background_id, ms.music_id, ms.music_category_id, ms.favourite_music_id_arr, ms.play_from_playlist, mc.name AS music_category
+      postgresql.query(
+        `SELECT verify_password('${password}', '${email}', '${loginMethod}') AS verification;`,
+        (err, result) => {
+          if (result) {
+            if (!result.rows[0].verification) {
+              res.json({
+                message: 'invalid password',
+              });
+            } else {
+              const selectMemberPromise = new Promise((resolve, reject) => {
+                postgresql.query(
+                  `SELECT m.*, ms.background_id, ms.music_id, ms.music_category_id, ms.favourite_music_id_arr, ms.play_from_playlist, mc.name AS music_category
                 FROM member m 
                 INNER JOIN member_setting ms ON m.id = ms.id
                 LEFT JOIN music_category mc ON ms.music_category_id = mc.id
-                WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = '${encryptedPassword}' AND login_method = '${loginMethod}');`,
-                (err, result) => {
-                  resolve(
-                    result
-                      ? result.rows.map((member) => {
-                          return {
-                            id: member.id,
-                            username: member.username,
-                            avatarId: member.avatar_id,
-                            memberType: member.is_premium ? 'premium' : 'free',
-                            backgroundId: member.background_id,
-                            musicId: member.music_id,
-                            musicCategoryId: member.music_category_id,
-                            musicCategory: member.music_category,
-                            favouriteMusicIdArr: member.favourite_music_id_arr,
-                            playFromPlaylist: member.play_from_playlist,
-                          };
-                        })
-                      : err
-                  );
-                }
-              );
-            });
-
-            selectMemberPromise.then((data) => {
-              res.json({
-                data,
+                WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
+                  (err, result) => {
+                    resolve(
+                      result
+                        ? result.rows.map((member) => {
+                            return {
+                              id: member.id,
+                              username: member.username,
+                              avatarId: member.avatar_id,
+                              memberType: member.is_premium ? 'premium' : 'free',
+                              backgroundId: member.background_id,
+                              musicId: member.music_id,
+                              musicCategoryId: member.music_category_id,
+                              musicCategory: member.music_category,
+                              favouriteMusicIdArr: member.favourite_music_id_arr,
+                              playFromPlaylist: member.play_from_playlist,
+                            };
+                          })
+                        : err
+                    );
+                  }
+                );
               });
+
+              selectMemberPromise.then((data) => {
+                res.json({
+                  data,
+                });
+              });
+            }
+          } else {
+            res.json({
+              message: 'error during authentication',
             });
           }
-        } else {
-          res.json({
-            message: 'error during authentication',
-          });
         }
-      });
+      );
     } else {
       res.json({
         message: 'error during authentication',
@@ -169,6 +153,36 @@ exports.memberSetting = (req, res) => {
     `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
     (err, result) => {
       res.json({});
+    }
+  );
+};
+
+exports.memberReview = (req, res) => {
+  const memberId = req.body.memberId;
+  const numberBackgroundNotEnough = req.body.numberBackgroundNotEnough;
+  const numberMusicNotEnough = req.body.numberMusicNotEnough;
+  const numberAmbienceNotEnough = req.body.numberAmbienceNotEnough;
+  const qualityBackgroundNotEnough = req.body.qualityBackgroundNotEnough;
+  const qualityMusicNotEnough = req.body.qualityMusicNotEnough;
+  const qualityAmbienceNotEnough = req.body.qualityAmbienceNotEnough;
+  const slowDownloadSpeed = req.body.slowDownloadSpeed;
+  const difficultToNavigate = req.body.difficultToNavigate;
+  const operationNotSmooth = req.body.operationNotSmooth;
+  const otherSuggestion = req.body.otherSuggestion;
+  const email = req.body.email;
+
+  postgresql.query(
+    `INSERT INTO member_satisfaction VALUES (${memberId}, ${numberBackgroundNotEnough}, ${numberMusicNotEnough}, ${numberAmbienceNotEnough}, ${qualityBackgroundNotEnough}, ${qualityMusicNotEnough}, ${qualityAmbienceNotEnough}, ${slowDownloadSpeed}, ${difficultToNavigate}, ${operationNotSmooth}, '${otherSuggestion}', '${email}');`,
+    (err, result) => {
+      if (!err) {
+        res.json({
+          result,
+        });
+      } else {
+        res.json({
+          message: 'error during reviewing',
+        });
+      }
     }
   );
 };
