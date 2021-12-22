@@ -1,9 +1,10 @@
 const postgresql = require('../postgresql/postgresql');
 
-exports.memberLogin = (req, res) => {
+exports.memberSignUp = (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const loginMethod = req.body.loginMethod;
+  const receiveNews = req.body.receiveNews;
 
   const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
     postgresql.query(
@@ -29,7 +30,7 @@ exports.memberLogin = (req, res) => {
     if (data.length === 0) {
       const addNewMemberPromise = new Promise((resolve, reject) => {
         postgresql.query(
-          `CALL add_new_member('${email}', '${password}', '${loginMethod}', '${email.split('@')[0]}')`,
+          `CALL add_new_member('${email}', '${password}', '${loginMethod}', '${email.split('@')[0]}', ${receiveNews});`,
           (err, result) => {
             resolve(result ? result : err);
           }
@@ -65,13 +66,55 @@ exports.memberLogin = (req, res) => {
         });
       });
     } else if (data.length === 1) {
+      res.json({
+        message: 'account already exist',
+      });
+    } else {
+      res.json({
+        message: 'error during authentication',
+      });
+    }
+  });
+};
+
+exports.memberSignIn = (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const loginMethod = req.body.loginMethod;
+
+  const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
+    postgresql.query(
+      `SELECT * FROM member_authentication WHERE email = '${email}' and login_method = '${loginMethod}';`,
+      (err, result) => {
+        resolve(
+          result
+            ? result.rows.map((memberAuthentication) => {
+                return {
+                  id: memberAuthentication.id,
+                  email: memberAuthentication.email,
+                  password: memberAuthentication.password,
+                  loginMethod: memberAuthentication.login_method,
+                };
+              })
+            : err
+        );
+      }
+    );
+  });
+
+  selectMemberAuthenticationPromise.then((data) => {
+    if (data.length === 0) {
+      res.json({
+        message: 'account not exist',
+      });
+    } else if (data.length === 1) {
       postgresql.query(
         `SELECT verify_password('${password}', '${email}', '${loginMethod}') AS verification;`,
         (err, result) => {
           if (result) {
             if (!result.rows[0].verification) {
               res.json({
-                message: 'invalid password',
+                message: 'incorrect password',
               });
             } else {
               const selectMemberPromise = new Promise((resolve, reject) => {
