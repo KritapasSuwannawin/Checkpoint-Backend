@@ -200,6 +200,15 @@ exports.memberSetting = (req, res) => {
   );
 };
 
+exports.memberProfile = (req, res) => {
+  const memberId = req.body.memberId;
+  const avatarId = req.body.avatarId;
+
+  postgresql.query(`UPDATE member SET avatar_id = '${avatarId}' WHERE id = ${memberId};`, (err, result) => {
+    res.json({});
+  });
+};
+
 exports.memberReview = (req, res) => {
   const memberId = req.body.memberId;
   const numberBackgroundNotEnough = req.body.numberBackgroundNotEnough;

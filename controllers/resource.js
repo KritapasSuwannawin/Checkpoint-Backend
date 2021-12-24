@@ -59,12 +59,28 @@ exports.getResource = (req, res) => {
     );
   });
 
-  Promise.all([ambientPromise, backgroundPromise, musicPromise]).then((values) => {
+  const avatarPromise = new Promise((resolve, reject) => {
+    postgresql.query('SELECT * FROM avatar ORDER BY id;', (err, result) => {
+      resolve(
+        result
+          ? result.rows.map((avatar) => {
+              return {
+                id: avatar.id,
+                filePath: avatar.file_path,
+              };
+            })
+          : err
+      );
+    });
+  });
+
+  Promise.all([ambientPromise, backgroundPromise, musicPromise, avatarPromise]).then((values) => {
     res.json({
       data: {
         ambient: values[0],
         background: values[1],
         music: values[2],
+        avatar: values[3],
       },
     });
   });
