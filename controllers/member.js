@@ -51,6 +51,7 @@ exports.memberSignUp = (req, res) => {
                         username: member.username,
                         avatarId: member.avatar_id,
                         memberType: member.is_premium ? 'premium' : 'free',
+                        registrationDate: member.registration_date,
                       };
                     })
                   : err
@@ -133,6 +134,7 @@ exports.memberSignIn = (req, res) => {
                               username: member.username,
                               avatarId: member.avatar_id,
                               memberType: member.is_premium ? 'premium' : 'free',
+                              registrationDate: member.registration_date,
                               backgroundId: member.background_id,
                               musicId: member.music_id,
                               musicCategoryId: member.music_category_id,
