@@ -4,6 +4,7 @@ const memberController = require('../controllers/member');
 
 const router = express.Router();
 
+router.route('/verification').post(memberController.memberVerification);
 router.route('/signup').post(memberController.memberSignUp);
 router.route('/signin').post(memberController.memberSignIn);
 router.route('/upgrade').post(memberController.memberUpgrade);
