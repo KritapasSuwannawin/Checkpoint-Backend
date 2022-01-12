@@ -1,5 +1,9 @@
 const postgresql = require('../postgresql/postgresql');
 const nodemailer = require('nodemailer');
+const omise = require('omise')({
+  publicKey: process.env.omise_public_key,
+  secretKey: process.env.omise_secret_key,
+});
 
 exports.memberVerification = (req, res) => {
   const email = req.body.email;
@@ -125,9 +129,10 @@ exports.memberSignUp = (req, res) => {
                   ? result.rows.map((member) => {
                       return {
                         id: member.id,
+                        email,
                         username: member.username,
                         avatarId: member.avatar_id,
-                        memberType: member.is_premium ? 'premium' : 'free',
+                        memberType: 'free',
                         registrationDate: member.registration_date,
                       };
                     })
@@ -195,40 +200,82 @@ exports.memberSignIn = (req, res) => {
                 message: 'incorrect password',
               });
             } else {
-              const selectMemberPromise = new Promise((resolve, reject) => {
+              const checkMemberPaymentPromise = new Promise((resolve, reject) => {
                 postgresql.query(
-                  `SELECT m.*, ms.background_id, ms.music_id, ms.music_category_id, ms.favourite_music_id_arr, ms.play_from_playlist, mc.name AS music_category
-                FROM member m 
-                INNER JOIN member_setting ms ON m.id = ms.id
-                LEFT JOIN music_category mc ON ms.music_category_id = mc.id
-                WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
+                  `SELECT * FROM member WHERE id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
                   (err, result) => {
-                    resolve(
-                      result
-                        ? result.rows.map((member) => {
-                            return {
-                              id: member.id,
-                              username: member.username,
-                              avatarId: member.avatar_id,
-                              memberType: member.is_premium ? 'premium' : 'free',
-                              registrationDate: member.registration_date,
-                              backgroundId: member.background_id,
-                              musicId: member.music_id,
-                              musicCategoryId: member.music_category_id,
-                              musicCategory: member.music_category,
-                              favouriteMusicIdArr: member.favourite_music_id_arr,
-                              playFromPlaylist: member.play_from_playlist,
-                            };
-                          })
-                        : err
-                    );
+                    if (!result.rows[0].recent_payment_date || !result.rows[0].omise_schedule_id) {
+                      resolve();
+                    }
+
+                    const currentTime = new Date().getTime();
+                    const recentPaymentTime = new Date(result.rows[0].recent_payment_date).getTime();
+                    const dateDifference = Math.floor((currentTime - recentPaymentTime) / (1000 * 60 * 60 * 24));
+
+                    if (dateDifference > 35) {
+                      omise.schedules.retrieve(result.rows[0].omise_schedule_id, (err, schedule) => {
+                        if (!err && schedule.active) {
+                          postgresql.query(
+                            `UPDATE member SET recent_payment_date = (recent_payment_date + INTERVAL '1 MONTH')::date WHERE id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
+                            (err, result) => {
+                              resolve();
+                            }
+                          );
+                        }
+                      });
+                    } else {
+                      resolve();
+                    }
                   }
                 );
               });
 
-              selectMemberPromise.then((data) => {
-                res.json({
-                  data,
+              checkMemberPaymentPromise.then(() => {
+                const selectMemberPromise = new Promise((resolve, reject) => {
+                  postgresql.query(
+                    `SELECT m.*, ms.background_id, ms.music_id, ms.music_category_id, ms.favourite_music_id_arr, ms.play_from_playlist, mc.name AS music_category
+                  FROM member m 
+                  INNER JOIN member_setting ms ON m.id = ms.id
+                  LEFT JOIN music_category mc ON ms.music_category_id = mc.id
+                  WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
+                    (err, result) => {
+                      let dateDifference = 100;
+                      const recentPaymentDate = result.rows[0].recent_payment_date;
+
+                      if (recentPaymentDate) {
+                        const currentTime = new Date().getTime();
+                        const recentPaymentTime = new Date(recentPaymentDate).getTime();
+                        dateDifference = Math.floor((currentTime - recentPaymentTime) / (1000 * 60 * 60 * 24));
+                      }
+
+                      resolve(
+                        result
+                          ? result.rows.map((member) => {
+                              return {
+                                id: member.id,
+                                email,
+                                username: member.username,
+                                avatarId: member.avatar_id,
+                                memberType: dateDifference < 37 ? 'premium' : 'free',
+                                registrationDate: member.registration_date,
+                                backgroundId: member.background_id,
+                                musicId: member.music_id,
+                                musicCategoryId: member.music_category_id,
+                                musicCategory: member.music_category,
+                                favouriteMusicIdArr: member.favourite_music_id_arr,
+                                playFromPlaylist: member.play_from_playlist,
+                              };
+                            })
+                          : err
+                      );
+                    }
+                  );
+                });
+
+                selectMemberPromise.then((data) => {
+                  res.json({
+                    data,
+                  });
                 });
               });
             }
@@ -247,20 +294,57 @@ exports.memberSignIn = (req, res) => {
   });
 };
 
-exports.memberUpgrade = (req, res) => {
-  const memberId = req.body.memberId;
+exports.memberPayment = async (req, res) => {
+  try {
+    const { memberId, email, token } = req.body;
 
-  postgresql.query(`UPDATE member SET is_premium = TRUE WHERE id = ${memberId};`, (err, result) => {
-    if (!err) {
-      res.json({
-        result,
-      });
+    const customer = await omise.customers.create({
+      email,
+      description: email,
+      card: token,
+    });
+
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.length > 1 ? `${date.getMonth() + 1}` : `0${date.getMonth() + 1}`;
+    const day = `${date.getDate()}`.length > 1 ? `${date.getDate()}` : `0${date.getDate()}`;
+
+    const schedule = await omise.schedules.create({
+      livemode: process.env.omise_livemode === 'true',
+      every: 1,
+      period: 'month',
+      on: {
+        days_of_month: [date.getDate() < 29 ? date.getDate() : 1],
+      },
+      start_date: `${year}-${month}-${day}`,
+      end_date: `${year + 100}-${month}-${day}`,
+      charge: {
+        customer: customer.id,
+        amount: 399,
+        currency: 'usd',
+        description: 'Subscription fee',
+      },
+    });
+
+    if (schedule.active || schedule.status === 'running' || schedule.status === 'expiring') {
+      postgresql.query(
+        `UPDATE member SET omise_schedule_id = '${schedule.id}', omise_customer_id = '${customer.id}', recent_payment_date = current_date WHERE id = ${memberId};`,
+        (err, result) => {
+          res.json({
+            active: true,
+          });
+        }
+      );
     } else {
       res.json({
-        message: 'error during upgrading to premium',
+        message: 'error during payment',
       });
     }
-  });
+  } catch (err) {
+    res.json({
+      message: 'error during payment',
+    });
+  }
 };
 
 exports.memberSetting = (req, res) => {
