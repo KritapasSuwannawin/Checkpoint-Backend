@@ -1,5 +1,6 @@
 const postgresql = require('../postgresql/postgresql');
 const nodemailer = require('nodemailer');
+const crypto = require('crypto-js');
 const omise = require('omise')({
   publicKey: process.env.omise_public_key,
   secretKey: process.env.omise_secret_key,
@@ -65,7 +66,7 @@ exports.memberVerification = (req, res) => {
           });
         } else {
           res.json({
-            verificationCode,
+            verificationCode: crypto.AES.encrypt(verificationCode, process.env.checkpoint_security_key).toString(),
           });
         }
       });
