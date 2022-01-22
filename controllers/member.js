@@ -82,6 +82,82 @@ exports.memberVerification = (req, res) => {
   });
 };
 
+exports.memberVerificationMobile = (req, res) => {
+  const email = req.body.email;
+  const loginMethod = req.body.loginMethod;
+
+  const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
+    postgresql.query(
+      `SELECT * FROM member_authentication WHERE email = '${email}' and login_method = '${loginMethod}';`,
+      (err, result) => {
+        resolve(
+          result
+            ? result.rows.map((memberAuthentication) => {
+                return {
+                  id: memberAuthentication.id,
+                  email: memberAuthentication.email,
+                  password: memberAuthentication.password,
+                  loginMethod: memberAuthentication.login_method,
+                };
+              })
+            : err
+        );
+      }
+    );
+  });
+
+  selectMemberAuthenticationPromise.then((data) => {
+    if (data.length === 0) {
+      function makeId(length) {
+        let result = '';
+        const characters = '0123456789';
+        const charactersLength = characters.length;
+        for (let i = 0; i < length; i++) {
+          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+      }
+
+      const verificationCode = makeId(6);
+
+      const transporter = nodemailer.createTransport({
+        service: 'hotmail',
+        auth: {
+          user: process.env.verification_email,
+          pass: process.env.verification_email_password,
+        },
+      });
+
+      const mailOptions = {
+        from: `"Checkpoint.tokyo" <${process.env.verification_email}>`,
+        to: email,
+        subject: "Checkpoint's Verification Code",
+        text: `Your verification code is ${verificationCode}`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          res.json({
+            message: 'error during authentication',
+          });
+        } else {
+          res.json({
+            verificationCode,
+          });
+        }
+      });
+    } else if (data.length === 1) {
+      res.json({
+        message: 'account already exist',
+      });
+    } else {
+      res.json({
+        message: 'error during authentication',
+      });
+    }
+  });
+};
+
 exports.memberSignUp = (req, res) => {
   const email = req.body.email;
   const password = req.body.password;

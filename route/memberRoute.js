@@ -5,6 +5,7 @@ const memberController = require('../controllers/member');
 const router = express.Router();
 
 router.route('/verification').post(memberController.memberVerification);
+router.route('/verification-mobile').post(memberController.memberVerificationMobile);
 router.route('/signup').post(memberController.memberSignUp);
 router.route('/signin').post(memberController.memberSignIn);
 router.route('/payment').post(memberController.memberPayment);
