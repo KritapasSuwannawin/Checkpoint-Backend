@@ -379,6 +379,179 @@ exports.memberSignIn = (req, res) => {
   });
 };
 
+exports.memberForgetPassword = (req, res) => {
+  const { email } = req.body;
+
+  const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
+    postgresql.query(
+      `SELECT * FROM member_authentication WHERE email = '${email}' and login_method = 'email';`,
+      (err, result) => {
+        resolve(
+          result
+            ? result.rows.map((memberAuthentication) => {
+                return {
+                  id: memberAuthentication.id,
+                  email: memberAuthentication.email,
+                  password: memberAuthentication.password,
+                  loginMethod: memberAuthentication.login_method,
+                };
+              })
+            : err
+        );
+      }
+    );
+  });
+
+  selectMemberAuthenticationPromise.then((data) => {
+    if (data.length === 0) {
+      res.json({
+        message: 'account not exist',
+      });
+    } else if (data.length === 1) {
+      function makeId(length) {
+        let result = '';
+        const characters = '0123456789';
+        const charactersLength = characters.length;
+        for (let i = 0; i < length; i++) {
+          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+      }
+
+      const verificationCode = makeId(6);
+
+      const transporter = nodemailer.createTransport({
+        service: 'hotmail',
+        auth: {
+          user: process.env.verification_email,
+          pass: process.env.verification_email_password,
+        },
+      });
+
+      const mailOptions = {
+        from: `"Checkpoint.tokyo" <${process.env.verification_email}>`,
+        to: email,
+        subject: "Checkpoint's Reset Password Verification Code",
+        html: `<h3 style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; font-weight: bold; font-size: 24px; line-height: 36px; margin: 16px 0px; color: rgb(30, 32, 38);"><span class="il">Reset</span> Your Password</h3>
+        <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);">Here is your verification code:</p>
+        <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);"><br><span style="padding: 5px 0px; font-size: 20px; font-weight: bolder; color: rgb(245, 122, 232);">${verificationCode}</span></p>
+        <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);"><br></p>
+        <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);">For further assistance, please contact us at support@checkpoint.tokyo<br>This is an automated message, please do not reply.</p>`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          res.json({
+            message: 'error during authentication',
+          });
+        } else {
+          res.json({
+            verificationCode: crypto.AES.encrypt(verificationCode, process.env.checkpoint_security_key).toString(),
+          });
+        }
+      });
+    } else {
+      res.json({
+        message: 'error during authentication',
+      });
+    }
+  });
+};
+
+exports.memberForgetPasswordMobile = (req, res) => {
+  const { email } = req.body;
+
+  const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
+    postgresql.query(
+      `SELECT * FROM member_authentication WHERE email = '${email}' and login_method = 'email';`,
+      (err, result) => {
+        resolve(
+          result
+            ? result.rows.map((memberAuthentication) => {
+                return {
+                  id: memberAuthentication.id,
+                  email: memberAuthentication.email,
+                  password: memberAuthentication.password,
+                  loginMethod: memberAuthentication.login_method,
+                };
+              })
+            : err
+        );
+      }
+    );
+  });
+
+  selectMemberAuthenticationPromise.then((data) => {
+    if (data.length === 0) {
+      res.json({
+        message: 'account not exist',
+      });
+    } else if (data.length === 1) {
+      function makeId(length) {
+        let result = '';
+        const characters = '0123456789';
+        const charactersLength = characters.length;
+        for (let i = 0; i < length; i++) {
+          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+      }
+
+      const verificationCode = makeId(6);
+
+      const transporter = nodemailer.createTransport({
+        service: 'hotmail',
+        auth: {
+          user: process.env.verification_email,
+          pass: process.env.verification_email_password,
+        },
+      });
+
+      const mailOptions = {
+        from: `"Checkpoint.tokyo" <${process.env.verification_email}>`,
+        to: email,
+        subject: "Checkpoint's Reset Password Verification Code",
+        html: `<h3 style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; font-weight: bold; font-size: 24px; line-height: 36px; margin: 16px 0px; color: rgb(30, 32, 38);"><span class="il">Reset</span> Your Password</h3>
+        <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);">Here is your verification code:</p>
+        <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);"><br><span style="padding: 5px 0px; font-size: 20px; font-weight: bolder; color: rgb(245, 122, 232);">${verificationCode}</span></p>
+        <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);"><br></p>
+        <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);">For further assistance, please contact us at support@checkpoint.tokyo<br>This is an automated message, please do not reply.</p>`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          res.json({
+            message: 'error during authentication',
+          });
+        } else {
+          res.json({
+            verificationCode,
+          });
+        }
+      });
+    } else {
+      res.json({
+        message: 'error during authentication',
+      });
+    }
+  });
+};
+
+exports.memberResetPassword = (req, res) => {
+  const { email, newPassword } = req.body;
+
+  postgresql.query(
+    `UPDATE member_authentication SET password = md5('${newPassword}') WHERE email = '${email}' and login_method = 'email';`,
+    (err, result) => {
+      err
+        ? res.json({
+            message: 'error during authentication',
+          })
+        : res.json({});
+    }
+  );
+};
+
 exports.memberPayment = async (req, res) => {
   try {
     const { memberId, email, token } = req.body;
