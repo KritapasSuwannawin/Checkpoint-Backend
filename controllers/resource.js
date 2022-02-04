@@ -29,6 +29,7 @@ exports.getResource = (req, res) => {
                 filePath: background.file_path,
                 thumbnailFilePath: background.thumbnail_file_path,
                 ambientIdArr: background.ambient_id_arr,
+                isPremium: background.is_premium,
               };
             })
           : err
@@ -50,7 +51,6 @@ exports.getResource = (req, res) => {
                   filePath: music.file_path,
                   thumbnailFilePath: music.thumbnail_file_path,
                   category: music.category_name,
-                  isPremium: music.is_premium,
                 };
               })
             : err
