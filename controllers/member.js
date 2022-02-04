@@ -226,8 +226,7 @@ exports.memberSignUp = (req, res) => {
                         email,
                         username: member.username,
                         avatarId: member.avatar_id,
-                        memberType: 'free',
-                        registrationDate: member.registration_date,
+                        isPremium: true,
                       };
                     })
                   : err
@@ -333,14 +332,10 @@ exports.memberSignIn = (req, res) => {
                   LEFT JOIN music_category mc ON ms.music_category_id = mc.id
                   WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
                     (err, result) => {
-                      let dateDifference = 100;
-                      const recentPaymentDate = result.rows[0].recent_payment_date;
-
-                      if (recentPaymentDate) {
-                        const currentTime = new Date().getTime();
-                        const recentPaymentTime = new Date(recentPaymentDate).getTime();
-                        dateDifference = Math.floor((currentTime - recentPaymentTime) / (1000 * 60 * 60 * 24));
-                      }
+                      const premiumExpirationDate = result.rows[0].premium_expiration_date;
+                      const currentTime = new Date().getTime();
+                      const premiumExpirationTime = new Date(premiumExpirationDate).getTime();
+                      const dateDifference = Math.floor((currentTime - premiumExpirationTime) / (1000 * 60 * 60 * 24));
 
                       resolve(
                         result
@@ -350,8 +345,7 @@ exports.memberSignIn = (req, res) => {
                                 email,
                                 username: member.username,
                                 avatarId: member.avatar_id,
-                                memberType: dateDifference < 37 ? 'premium' : 'free',
-                                registrationDate: member.registration_date,
+                                isPremium: dateDifference < 3 ? true : false,
                                 backgroundId: member.background_id,
                                 musicId: member.music_id,
                                 musicCategoryId: member.music_category_id,
