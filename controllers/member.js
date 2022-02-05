@@ -1,35 +1,56 @@
 const postgresql = require('../postgresql/postgresql');
-const aws = require('aws-sdk');
+// const aws = require('aws-sdk');
 const crypto = require('crypto-js');
 
-const SESConfig = {
-  apiVersion: '2010-12-01',
-  accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
-  region: process.env.AWS_SES_REGION,
-};
+const Recipient = require('mailersend').Recipient;
+const EmailParams = require('mailersend').EmailParams;
+const MailerSend = require('mailersend');
+
+// const SESConfig = {
+//   apiVersion: '2010-12-01',
+//   accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID,
+//   secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
+//   region: process.env.AWS_SES_REGION,
+// };
 
 function sendMail(to, subject, html) {
-  const params = {
-    Destination: {
-      ToAddresses: [to],
-    },
-    Message: {
-      Body: {
-        Html: {
-          Charset: 'UTF-8',
-          Data: html,
-        },
-      },
-      Subject: {
-        Charset: 'UTF-8',
-        Data: subject,
-      },
-    },
-    Source: process.env.no_reply_email,
-  };
+  // const params = {
+  //   Destination: {
+  //     ToAddresses: [to],
+  //   },
+  //   Message: {
+  //     Body: {
+  //       Html: {
+  //         Charset: 'UTF-8',
+  //         Data: html,
+  //       },
+  //     },
+  //     Subject: {
+  //       Charset: 'UTF-8',
+  //       Data: subject,
+  //     },
+  //   },
+  //   Source: process.env.no_reply_email,
+  // };
 
-  return new aws.SES(SESConfig).sendEmail(params).promise();
+  // return new aws.SES(SESConfig).sendEmail(params).promise();
+
+  const mailersend = new MailerSend({
+    api_key: process.env.MAILERSEND_API_KEY,
+  });
+
+  const recipients = [new Recipient(to)];
+
+  const emailParams = new EmailParams()
+    .setFrom(process.env.no_reply_email)
+    .setFromName('Checkpoint.tokyo')
+    .setRecipients(recipients)
+    .setSubject(subject)
+    .setHtml(html);
+
+  mailersend.send(emailParams);
+
+  return new Promise((resolve, reject) => resolve());
 }
 
 exports.memberVerification = (req, res) => {
