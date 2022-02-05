@@ -11,9 +11,10 @@ router.route('/signin').post(memberController.memberSignIn);
 router.route('/forget-password').post(memberController.memberForgetPassword);
 router.route('/forget-password-mobile').post(memberController.memberForgetPasswordMobile);
 router.route('/reset-password').post(memberController.memberResetPassword);
-router.route('/payment').post(memberController.memberPayment);
 router.route('/setting').post(memberController.memberSetting);
 router.route('/profile').post(memberController.memberProfile);
 router.route('/review').post(memberController.memberReview);
+router.route('/payment').post(memberController.memberPayment);
+router.route('/activation').post(memberController.memberActivation);
 
 module.exports = router;
