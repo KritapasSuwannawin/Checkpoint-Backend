@@ -13,7 +13,8 @@ router.route('/forget-password-mobile').post(memberController.memberForgetPasswo
 router.route('/reset-password').post(memberController.memberResetPassword);
 router.route('/setting').post(memberController.memberSetting);
 router.route('/profile').post(memberController.memberProfile);
-router.route('/review').post(memberController.memberReview);
+router.route('/check-feedback').post(memberController.memberCheckFeedback);
+router.route('/feedback').post(memberController.memberFeedback);
 router.route('/payment').post(memberController.memberPayment);
 router.route('/activation').post(memberController.memberActivation);
 

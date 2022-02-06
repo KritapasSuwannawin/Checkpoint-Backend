@@ -244,6 +244,8 @@ exports.memberSignUp = (req, res) => {
                         username: member.username,
                         avatarId: member.avatar_id,
                         isPremium: true,
+                        registrationDate: member.registration_date,
+                        premiumExpirationDate: member.premium_expiration_date,
                       };
                     })
                   : err
@@ -318,10 +320,8 @@ exports.memberSignIn = (req, res) => {
                   LEFT JOIN music_category mc ON ms.music_category_id = mc.id
                   WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
                   (err, result) => {
-                    const premiumExpirationDate = result.rows[0].premium_expiration_date;
                     const currentTime = new Date().getTime();
-                    const premiumExpirationTime = new Date(premiumExpirationDate).getTime();
-                    const dateDifference = Math.floor((currentTime - premiumExpirationTime) / (1000 * 60 * 60 * 24));
+                    const premiumExpirationTime = new Date(result.rows[0].premium_expiration_date).getTime();
 
                     resolve(
                       result
@@ -331,7 +331,9 @@ exports.memberSignIn = (req, res) => {
                               email,
                               username: member.username,
                               avatarId: member.avatar_id,
-                              isPremium: dateDifference < 3 ? true : false,
+                              isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
+                              registrationDate: member.registration_date,
+                              premiumExpirationDate: member.premium_expiration_date,
                               backgroundId: member.background_id,
                               musicId: member.music_id,
                               musicCategoryId: member.music_category_id,
@@ -569,34 +571,92 @@ exports.memberProfile = (req, res) => {
   });
 };
 
-exports.memberReview = (req, res) => {
-  const memberId = req.body.memberId;
-  const numberBackgroundNotEnough = req.body.numberBackgroundNotEnough;
-  const numberMusicNotEnough = req.body.numberMusicNotEnough;
-  const numberAmbienceNotEnough = req.body.numberAmbienceNotEnough;
-  const qualityBackgroundNotEnough = req.body.qualityBackgroundNotEnough;
-  const qualityMusicNotEnough = req.body.qualityMusicNotEnough;
-  const qualityAmbienceNotEnough = req.body.qualityAmbienceNotEnough;
-  const slowDownloadSpeed = req.body.slowDownloadSpeed;
-  const difficultToNavigate = req.body.difficultToNavigate;
-  const operationNotSmooth = req.body.operationNotSmooth;
-  const otherSuggestion = req.body.otherSuggestion;
-  const email = req.body.email;
+exports.memberCheckFeedback = (req, res) => {
+  const { memberId, tableName } = req.body;
 
-  postgresql.query(
-    `INSERT INTO member_satisfaction VALUES (${memberId}, ${numberBackgroundNotEnough}, ${numberMusicNotEnough}, ${numberAmbienceNotEnough}, ${qualityBackgroundNotEnough}, ${qualityMusicNotEnough}, ${qualityAmbienceNotEnough}, ${slowDownloadSpeed}, ${difficultToNavigate}, ${operationNotSmooth}, '${otherSuggestion}', '${email}');`,
-    (err, result) => {
-      if (!err) {
-        res.json({
-          result,
-        });
-      } else {
-        res.json({
-          message: 'error during reviewing',
-        });
-      }
+  postgresql.query(`SELECT * FROM ${tableName} WHERE id = ${memberId};`, (err, result) => {
+    if (result && result.rows.length === 1) {
+      res.json({
+        message: 'done',
+      });
+    } else {
+      res.json({});
     }
-  );
+  });
+};
+
+exports.memberFeedback = (req, res) => {
+  const { memberId, tableName } = req.body;
+
+  if (tableName === 'feedback_five_minute') {
+    const { star, ad, social_media, friend, otherWay, sleep, productivity, relax, other_interest } = req.body;
+    postgresql.query(
+      `INSERT INTO ${tableName} VALUES (${memberId}, ${star}, ${ad}, ${social_media}, ${friend}, '${otherWay}', ${sleep}, ${productivity}, ${relax}, '${other_interest}');`,
+      (err, result) => {
+        res.json({});
+      }
+    );
+  } else if (tableName === 'feedback_after_trial_standard') {
+    const {
+      feature_already_enough,
+      expensive,
+      rarely_use,
+      use_other_service,
+      not_worth_money,
+      not_looking_for,
+      other,
+    } = req.body;
+    postgresql.query(
+      `INSERT INTO ${tableName} VALUES (${memberId}, ${feature_already_enough}, ${expensive}, ${rarely_use}, ${use_other_service}, ${not_worth_money}, ${not_looking_for}, '${other}');`,
+      (err, result) => {
+        res.json({});
+      }
+    );
+  } else if (tableName === 'feedback_trial_last_day') {
+    const {
+      music_quantity,
+      ambience_quantity,
+      background_quantity,
+      music_quality,
+      ambience_quality,
+      background_quality,
+      interface,
+      other_weakness,
+      ambience_customization,
+      background_customization,
+      easy_to_use,
+      suggestion,
+      star,
+      wanted_feature,
+    } = req.body;
+    postgresql.query(
+      `INSERT INTO ${tableName} VALUES (${memberId}, ${music_quantity}, ${ambience_quantity}, ${background_quantity}, ${music_quality}, ${ambience_quality}, ${background_quality}, ${interface}, '${other_weakness}', ${ambience_customization}, ${background_customization}, ${easy_to_use}, '${suggestion}', ${star}, '${wanted_feature}');`,
+      (err, result) => {
+        res.json({});
+      }
+    );
+  } else if (tableName === 'feedback_after_trial_premium') {
+    const {
+      sleep,
+      productivity,
+      relax,
+      affordable,
+      quality,
+      other_reason,
+      personalization,
+      one_stop_service,
+      other_value,
+      suggestion,
+    } = req.body;
+    postgresql.query(
+      `INSERT INTO ${tableName} VALUES (${memberId}, ${sleep}, ${productivity}, ${relax}, ${affordable}, ${quality}, '${other_reason}', ${personalization}, ${one_stop_service}, '${other_value}', '${suggestion}');`,
+      (err, result) => {
+        res.json({});
+      }
+    );
+  } else {
+    res.json({});
+  }
 };
 
 exports.memberPayment = (req, res) => {
