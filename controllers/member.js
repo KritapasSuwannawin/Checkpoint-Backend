@@ -527,13 +527,37 @@ exports.memberSetting = (req, res) => {
   const memberId = req.body.memberId;
   const favouriteMusicIdArr = req.body.favouriteMusicIdArr;
   const playFromPlaylist = req.body.playFromPlaylist;
+  const deviceId = req.body.deviceId;
+  const onlineDuration = req.body.onlineDuration;
 
-  postgresql.query(
-    `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
-    (err, result) => {
-      res.json({});
+  if (!memberId) {
+    res.json({});
+  } else {
+    if (Math.floor(onlineDuration / 1000) === 0) {
+      postgresql.query(`UPDATE member SET current_device_id = '${deviceId}' WHERE id = ${memberId};`, (err, result) => {
+        res.json({});
+      });
+    } else {
+      postgresql.query(`SELECT current_device_id FROM member WHERE id = ${memberId};`, (err, result) => {
+        if (result) {
+          if (result.rows[0].current_device_id === deviceId) {
+            postgresql.query(
+              `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
+              (err, result) => {
+                res.json({});
+              }
+            );
+          } else {
+            res.json({
+              message: 'new device has logged in',
+            });
+          }
+        } else {
+          res.json({});
+        }
+      });
     }
-  );
+  }
 };
 
 exports.memberProfile = (req, res) => {
