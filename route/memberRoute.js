@@ -15,6 +15,7 @@ router.route('/setting').post(memberController.memberSetting);
 router.route('/profile').post(memberController.memberProfile);
 router.route('/check-feedback').post(memberController.memberCheckFeedback);
 router.route('/feedback').post(memberController.memberFeedback);
+router.route('/issue').post(memberController.memberIssue);
 router.route('/payment').post(memberController.memberPayment);
 router.route('/activation').post(memberController.memberActivation);
 

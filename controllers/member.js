@@ -1,56 +1,56 @@
 const postgresql = require('../postgresql/postgresql');
-// const aws = require('aws-sdk');
+const aws = require('aws-sdk');
 const crypto = require('crypto-js');
 
-const Recipient = require('mailersend').Recipient;
-const EmailParams = require('mailersend').EmailParams;
-const MailerSend = require('mailersend');
+// const Recipient = require('mailersend').Recipient;
+// const EmailParams = require('mailersend').EmailParams;
+// const MailerSend = require('mailersend');
 
-// const SESConfig = {
-//   apiVersion: '2010-12-01',
-//   accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID,
-//   secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
-//   region: process.env.AWS_SES_REGION,
-// };
+const SESConfig = {
+  apiVersion: '2010-12-01',
+  accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
+  region: process.env.AWS_SES_REGION,
+};
 
 function sendMail(to, subject, html) {
-  // const params = {
-  //   Destination: {
-  //     ToAddresses: [to],
-  //   },
-  //   Message: {
-  //     Body: {
-  //       Html: {
-  //         Charset: 'UTF-8',
-  //         Data: html,
-  //       },
-  //     },
-  //     Subject: {
-  //       Charset: 'UTF-8',
-  //       Data: subject,
-  //     },
-  //   },
-  //   Source: process.env.no_reply_email,
-  // };
+  const params = {
+    Destination: {
+      ToAddresses: [to],
+    },
+    Message: {
+      Body: {
+        Html: {
+          Charset: 'UTF-8',
+          Data: html,
+        },
+      },
+      Subject: {
+        Charset: 'UTF-8',
+        Data: subject,
+      },
+    },
+    Source: process.env.no_reply_email,
+  };
 
-  // return new aws.SES(SESConfig).sendEmail(params).promise();
+  return new aws.SES(SESConfig).sendEmail(params).promise();
 
-  const mailersend = new MailerSend({
-    api_key: process.env.MAILERSEND_API_KEY,
-  });
+  // const mailersend = new MailerSend({
+  //   api_key: process.env.MAILERSEND_API_KEY,
+  // });
 
-  const recipients = [new Recipient(to)];
+  // const recipients = [new Recipient(to)];
 
-  const emailParams = new EmailParams()
-    .setFrom(process.env.no_reply_email)
-    .setFromName('Checkpoint.tokyo')
-    .setRecipients(recipients)
-    .setSubject(subject)
-    .setHtml(html);
+  // const emailParams = new EmailParams()
+  //   .setFrom(process.env.no_reply_email)
+  //   .setFromName('Checkpoint.tokyo')
+  //   .setRecipients(recipients)
+  //   .setSubject(subject)
+  //   .setHtml(html);
 
-  mailersend.send(emailParams);
+  // mailersend.send(emailParams);
 
-  return new Promise((resolve, reject) => resolve());
+  // return new Promise((resolve, reject) => resolve());
 }
 
 exports.memberVerification = (req, res) => {
@@ -605,9 +605,10 @@ exports.memberFeedback = (req, res) => {
       not_worth_money,
       not_looking_for,
       other,
+      star,
     } = req.body;
     postgresql.query(
-      `INSERT INTO ${tableName} VALUES (${memberId}, ${feature_already_enough}, ${expensive}, ${rarely_use}, ${use_other_service}, ${not_worth_money}, ${not_looking_for}, '${other}');`,
+      `INSERT INTO ${tableName} VALUES (${memberId}, ${feature_already_enough}, ${expensive}, ${rarely_use}, ${use_other_service}, ${not_worth_money}, ${not_looking_for}, '${other}', ${star});`,
       (err, result) => {
         res.json({});
       }
@@ -628,9 +629,10 @@ exports.memberFeedback = (req, res) => {
       suggestion,
       star,
       wanted_feature,
+      other_strength,
     } = req.body;
     postgresql.query(
-      `INSERT INTO ${tableName} VALUES (${memberId}, ${music_quantity}, ${ambience_quantity}, ${background_quantity}, ${music_quality}, ${ambience_quality}, ${background_quality}, ${interface}, '${other_weakness}', ${ambience_customization}, ${background_customization}, ${easy_to_use}, '${suggestion}', ${star}, '${wanted_feature}');`,
+      `INSERT INTO ${tableName} VALUES (${memberId}, ${music_quantity}, ${ambience_quantity}, ${background_quantity}, ${music_quality}, ${ambience_quality}, ${background_quality}, ${interface}, '${other_weakness}', ${ambience_customization}, ${background_customization}, ${easy_to_use}, '${suggestion}', ${star}, '${wanted_feature}', '${other_strength}');`,
       (err, result) => {
         res.json({});
       }
@@ -646,10 +648,43 @@ exports.memberFeedback = (req, res) => {
       personalization,
       one_stop_service,
       other_value,
-      suggestion,
+      relaxing_music,
+      peaceful_art,
+      realistic_ambience,
+      background_customization,
+      ambience_customization,
+      easy_to_use,
+      other_feature,
+      star,
     } = req.body;
     postgresql.query(
-      `INSERT INTO ${tableName} VALUES (${memberId}, ${sleep}, ${productivity}, ${relax}, ${affordable}, ${quality}, '${other_reason}', ${personalization}, ${one_stop_service}, '${other_value}', '${suggestion}');`,
+      `INSERT INTO ${tableName} VALUES (${memberId}, ${sleep}, ${productivity}, ${relax}, ${affordable}, ${quality}, '${other_reason}', ${personalization}, ${one_stop_service}, '${other_value}', ${relaxing_music}, ${peaceful_art}, ${realistic_ambience}, ${background_customization}, ${ambience_customization}, ${easy_to_use}, '${other_feature}', ${star});`,
+      (err, result) => {
+        res.json({});
+      }
+    );
+  } else if (tableName === 'feedback') {
+    const {
+      star,
+      high_school,
+      college,
+      working,
+      other_job,
+      less_than_one_week,
+      one_week,
+      almost_one_month,
+      more_than_one_month,
+      full_screen_browser,
+      minimized_browser,
+      half_screen_browser,
+      phone,
+      sleep,
+      productivity,
+      relax,
+      other_problem,
+    } = req.body;
+    postgresql.query(
+      `INSERT INTO ${tableName} VALUES (${memberId}, ${star}, ${high_school}, ${college}, ${working}, '${other_job}', ${less_than_one_week}, ${one_week}, ${almost_one_month}, ${more_than_one_month}, ${full_screen_browser}, ${minimized_browser}, ${half_screen_browser}, ${phone}, ${sleep}, ${productivity}, ${relax}, '${other_problem}');`,
       (err, result) => {
         res.json({});
       }
@@ -659,10 +694,20 @@ exports.memberFeedback = (req, res) => {
   }
 };
 
+exports.memberIssue = (req, res) => {
+  const { memberId, email, subject, detail } = req.body;
+  postgresql.query(
+    `INSERT INTO member_issue VALUES (${memberId}, '${email}', '${subject}', '${detail}');`,
+    (err, result) => {
+      res.json({});
+    }
+  );
+};
+
 exports.memberPayment = (req, res) => {
   const { supporter_email: email, total_amount: amount } = req.body.response;
 
-  if (Number(amount) >= Number(process.env.SUBSCRIPTION_PRICE)) {
+  if (Number(amount) >= Number(process.env.SUBSCRIPTION_PRICE_THREE)) {
     function makeId(length) {
       let result = '';
       const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -676,7 +721,42 @@ exports.memberPayment = (req, res) => {
     const activationCode = makeId(10);
 
     postgresql.query(
-      `INSERT INTO coupon (email, code, is_activated) values ('${email}', '${activationCode}', false);`,
+      `INSERT INTO coupon (email, code, is_activated, month) values ('${email}', '${activationCode}', false, 3);`,
+      (err, result) => {
+        const sendMailPromise = sendMail(
+          email,
+          "Checkpoint's Premium Activation Code",
+          `<h3 style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; font-weight: bold; font-size: 24px; line-height: 36px; margin: 16px 0px; color: rgb(30, 32, 38);"><span class="il">Checkpoint Premium</span> Activation</h3>
+          <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);">Thank you for purchasing Checkpoint Premium!<br>Here is your premium activation code:</p>
+          <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);"><br><span style="padding: 5px 0px; font-size: 20px; font-weight: bolder; color: rgb(245, 122, 232);">${activationCode}</span></p>
+          <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);"><br></p>
+          <p style="font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; margin: 16px 0px 0px; color: rgb(71, 77, 87);">For further assistance, please contact us at support@checkpoint.tokyo<br>This is an automated message, please do not reply.</p>`
+        );
+
+        sendMailPromise
+          .then(() => {
+            res.json({});
+          })
+          .catch(() => {
+            res.json({});
+          });
+      }
+    );
+  } else if (Number(amount) >= Number(process.env.SUBSCRIPTION_PRICE_ONE)) {
+    function makeId(length) {
+      let result = '';
+      const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const charactersLength = characters.length;
+      for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      }
+      return result;
+    }
+
+    const activationCode = makeId(10);
+
+    postgresql.query(
+      `INSERT INTO coupon (email, code, is_activated, month) values ('${email}', '${activationCode}', false, 1);`,
       (err, result) => {
         const sendMailPromise = sendMail(
           email,
@@ -705,10 +785,11 @@ exports.memberPayment = (req, res) => {
 exports.memberActivation = (req, res) => {
   const { memberId, activationCode } = req.body;
 
-  postgresql.query(`SELECT is_activated FROM coupon WHERE code = '${activationCode}';`, (err, result) => {
+  postgresql.query(`SELECT is_activated, month FROM coupon WHERE code = '${activationCode}';`, (err, result) => {
     if (result) {
       if (result.rows.length === 1) {
-        if (result.rows[0].is_activated) {
+        const { is_activated, month } = result.rows[0];
+        if (is_activated) {
           res.json({
             message: 'code already used',
           });
@@ -719,18 +800,17 @@ exports.memberActivation = (req, res) => {
                 message: 'error during authentication',
               });
             } else {
-              postgresql.query(
-                `UPDATE member SET premium_expiration_date = current_date + interval '30 day' WHERE id = '${memberId}';`,
-                (err, result) => {
-                  if (err) {
-                    res.json({
-                      message: 'error during authentication',
-                    });
-                  } else {
-                    res.json({});
-                  }
+              postgresql.query(`CALL activate_member(${memberId}, ${month});`, (err, result) => {
+                if (err) {
+                  res.json({
+                    message: 'error during authentication',
+                  });
+                } else {
+                  res.json({
+                    month,
+                  });
                 }
-              );
+              });
             }
           });
         }
