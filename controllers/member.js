@@ -491,7 +491,7 @@ exports.memberForgetPasswordMobile = (req, res) => {
       sendMailPromise
         .then(() => {
           res.json({
-            verificationCode: crypto.AES.encrypt(verificationCode, process.env.checkpoint_security_key).toString(),
+            verificationCode,
           });
         })
         .catch(() => {
@@ -544,7 +544,7 @@ exports.memberSetting = (req, res) => {
         if (result) {
           if (result.rows[0].current_device_id === deviceId) {
             postgresql.query(
-              `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
+              `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}]::integer[], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
               (err, result) => {
                 res.json({});
               }
@@ -806,9 +806,21 @@ exports.memberActivation = (req, res) => {
                     message: 'error during authentication',
                   });
                 } else {
-                  res.json({
-                    month,
-                  });
+                  postgresql.query(
+                    `SELECT premium_expiration_date FROM member WHERE id = ${memberId};`,
+                    (err, result) => {
+                      if (err) {
+                        res.json({
+                          message: 'error during authentication',
+                        });
+                      } else {
+                        res.json({
+                          month,
+                          premiumExpirationDate: result.rows[0].premium_expiration_date,
+                        });
+                      }
+                    }
+                  );
                 }
               });
             }
