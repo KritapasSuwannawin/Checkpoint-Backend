@@ -1,0 +1,395 @@
+--- version 1.0.0 ---
+
+CREATE OR REPLACE PROCEDURE public.activate_member(
+	in_member_id integer,
+	in_month integer)
+LANGUAGE 'plpgsql'
+AS $BODY$
+declare
+	interval_day interval := ((in_month * 30)::varchar(2) || ' day')::interval;
+begin	
+	if (select current_date > (select premium_expiration_date from member where id = in_member_id)) then
+  		UPDATE member SET premium_expiration_date = current_date + interval_day WHERE id = in_member_id;
+	else
+  		UPDATE member SET premium_expiration_date = premium_expiration_date + interval_day WHERE id = in_member_id;
+	END if;
+end;
+$BODY$;
+
+CREATE OR REPLACE PROCEDURE public.add_new_member(
+	in_email character varying,
+	in_password character varying,
+	in_login_method character varying,
+	in_username character varying,
+	in_receive_news boolean)
+LANGUAGE 'plpgsql'
+AS $BODY$
+begin
+	INSERT INTO member_authentication (email, password, login_method) values (in_email, MD5(in_password), in_login_method);
+	INSERT INTO member (username, avatar_id, receive_news, registration_date, premium_expiration_date) values (in_username, 1, in_receive_news, current_date, current_date + interval '3 day');
+	INSERT INTO member_setting (background_id, music_id, music_category_id, favourite_music_id_arr, play_from_playlist) 
+		values ('0411', 13, NULL, ARRAY[]::integer[], FALSE);
+end;
+$BODY$;
+
+CREATE OR REPLACE FUNCTION public.verify_password(
+	in_password character varying,
+	in_email character varying,
+	in_login_method character varying)
+    RETURNS boolean
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+begin
+  if MD5(in_password) = (select password from member_authentication where email = in_email and login_method = in_login_method) then
+		return true;
+	else
+		return false;
+	end if;
+end;
+$BODY$;
+
+CREATE TABLE IF NOT EXISTS public.ambient
+(
+    id SERIAL,
+    name character varying(255),
+    file_path character varying(255),
+    thumbnail_file_path character varying(255),
+    volume numeric(3,2),
+    name_japanese character varying(255),
+    CONSTRAINT ambient_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.avatar
+(
+    id SERIAL,
+    file_path character varying(255),
+    CONSTRAINT avatar_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.background
+(
+    id character varying(255) NOT NULL,
+    file_path character varying(255),
+    thumbnail_file_path character varying(255),
+    ambient_id_arr integer[],
+    is_premium boolean,
+    CONSTRAINT background_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.coupon
+(
+    id SERIAL,
+    email character varying(255),
+    code character varying(255),
+    is_activated boolean,
+    month integer,
+    CONSTRAINT coupon_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.feedback
+(
+    id integer,
+    star integer,
+    high_school boolean,
+    college boolean,
+    working boolean,
+    other_job character varying(255),
+    less_than_one_week boolean,
+    one_week boolean,
+    almost_one_month boolean,
+    more_than_one_month boolean,
+    full_screen_browser boolean,
+    minimized_browser boolean,
+    half_screen_browser boolean,
+    phone boolean,
+    sleep boolean,
+    productivity boolean,
+    relax boolean,
+    other_problem character varying(255)
+);
+
+CREATE TABLE IF NOT EXISTS public.feedback_after_trial_premium
+(
+    id integer NOT NULL,
+    sleep boolean,
+    productivity boolean,
+    relax boolean,
+    affordable boolean,
+    quality boolean,
+    other_reason character varying(255),
+    personalization boolean,
+    one_stop_service boolean,
+    other_value character varying(255),
+    relaxing_music boolean,
+    peaceful_art boolean,
+    realistic_ambience boolean,
+    background_customization boolean,
+    ambience_customization boolean,
+    easy_to_use boolean,
+    other_feature character varying(255),
+    star integer,
+    CONSTRAINT feedback_premium_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.feedback_after_trial_standard
+(
+    id integer NOT NULL,
+    feature_already_enough boolean,
+    expensive boolean,
+    rarely_use boolean,
+    use_other_service boolean,
+    not_worth_money boolean,
+    not_looking_for boolean,
+    other character varying(255),
+    star integer,
+    CONSTRAINT before_last_day_feedback_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.feedback_five_minute
+(
+    id integer NOT NULL,
+    star integer,
+    ad boolean,
+    social_media boolean,
+    friend boolean,
+    other_way character varying(255),
+    sleep boolean,
+    productivity boolean,
+    relax boolean,
+    other_interest character varying(255),
+    CONSTRAINT five_minute_feedback_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.feedback_trial_last_day
+(
+    id integer NOT NULL,
+    music_quantity boolean,
+    ambience_quantity boolean,
+    background_quantity boolean,
+    music_quality boolean,
+    ambience_quality boolean,
+    background_quality boolean,
+    interface boolean,
+    other_weakness character varying(255),
+    ambience_customization boolean,
+    background_customization boolean,
+    easy_to_use boolean,
+    suggestion character varying(255),
+    star integer,
+    wanted_feature character varying(255),
+    other_strength character varying(255),
+    CONSTRAINT feedback_last_day_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.member
+(
+    id SERIAL,
+    username character varying(255),
+    avatar_id integer,
+    receive_news boolean,
+    registration_date date,
+    premium_expiration_date date,
+    current_device_id character varying(255),
+    CONSTRAINT member_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.member_authentication
+(
+    id SERIAL,
+    email character varying(255),
+    password character varying(255),
+    login_method character varying(255),
+    CONSTRAINT member_authentication_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.member_issue
+(
+    id integer,
+    email character varying(255),
+    subject character varying(255),
+    detail character varying(255)
+);
+
+
+CREATE TABLE IF NOT EXISTS public.member_setting
+(
+    id SERIAL,
+    background_id character varying(255),
+    music_id integer,
+    music_category_id integer,
+    favourite_music_id_arr integer[],
+    play_from_playlist boolean,
+    CONSTRAINT member_setting_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.music
+(
+    id SERIAL,
+    music_name character varying(255),
+    artist_name character varying(255),
+    file_path character varying(255),
+    thumbnail_file_path character varying(255),
+    category_id integer,
+    CONSTRAINT music_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.music_category
+(
+    id SERIAL,
+    name character varying(255),
+    CONSTRAINT music_category_pkey PRIMARY KEY (id)
+);
+
+INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
+	('Light Rain', 'ambient/audio/Light_Rain.m4a', 'ambient/thumbnail/TAB_Light_Rain.jpg', 0.15, '小雨'),
+	('Heavy Rain', 'ambient/audio/Heavy_Rain.m4a', 'ambient/thumbnail/TAB_Heavy_Rain.jpg', 0.2, '激しい雨'),
+	('Thunder Storm', 'ambient/audio/Thunder_Strom.m4a', 'ambient/thumbnail/TAB_Thunder_Strom.jpg', 0.5, '雷'),
+	('Wind Tree', 'ambient/audio/Wind_Tree.m4a', 'ambient/thumbnail/TAB_Wind_Tree.jpg', 0.1, '木のさざめき'),
+	('River', 'ambient/audio/River.m4a', 'ambient/thumbnail/TAB_River.jpg', 0.15, '川'),
+	('Bird Park', 'ambient/audio/Bird_Park.m4a', 'ambient/thumbnail/TAB_Bird_Park.jpg', 0.15, '公園の鳥'),
+	('Bird Forest', 'ambient/audio/Bird_Forest.m4a', 'ambient/thumbnail/TAB_Bird_Forest.jpg', 0.15, '森の鳥'),
+	('Night Forest', 'ambient/audio/Night_Forest.m4a',  'ambient/thumbnail/TAB_Night_Forest.jpg', 0.15, '夜の森'),
+	('Light Wind', 'ambient/audio/Light_Wind.m4a', 'ambient/thumbnail/TAB_Cold_Wind.jpg', 0.25, '風のさざめき'),
+	('Wind Chimes', 'ambient/audio/Wind_Chimes.m4a', 'ambient/thumbnail/TAB_Wind_Chimes.jpg', 0.15, '風鈴'),
+	('Air Conditioner', 'ambient/audio/Air_Conditioner.m4a', 'ambient/thumbnail/TAB_Air_Conditioner.jpg', 0.25, 'エアコン'),
+	('Rain on Window', 'ambient/audio/Rain_On_Window.m4a', 'ambient/thumbnail/TAB_Rain_On_Window.jpg', 0.25, '窓に雨が降る'),
+	('Cafe', 'ambient/audio/Cafe.m4a', 'ambient/thumbnail/TAB_Cafe.jpg', 0.15, 'カフェ'),
+	('Rooftop', 'ambient/audio/City_Rooftop.m4a', 'ambient/thumbnail/TAB_City_Rooftop.jpg', 0.2, '屋上'),
+	('Fireplace', 'ambient/audio/Fireplace.m4a', 'ambient/thumbnail/TAB_Fireplace.jpg', 0.2, '暖炉');
+
+INSERT INTO avatar (file_path) VALUES 
+  ('avatar/P01.jpg'),
+  ('avatar/P02.jpg'),
+  ('avatar/P03.jpg'),
+  ('avatar/P04.jpg'),
+  ('avatar/P05.jpg'),
+  ('avatar/P06.jpg'),
+  ('avatar/P07.jpg'),
+  ('avatar/P08.jpg'),
+  ('avatar/P09.jpg'),
+  ('avatar/P10.jpg'),
+  ('avatar/P11.jpg'),
+  ('avatar/P12.jpg'),
+  ('avatar/P13.jpg'),
+  ('avatar/P14.jpg'),
+  ('avatar/P15.jpg'),
+  ('avatar/P16.jpg'),
+  ('avatar/P17.jpg');
+
+INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_premium) VALUES
+	('0111', 'background/video/BG0111_1080p.mp4', 'background/thumbnail/TBG0111.jpg', ARRAY[4, 7], false),
+	('0112', 'background/video/BG0112_1080p.mp4', 'background/thumbnail/TBG0112.jpg', ARRAY[1, 4, 7], false),
+	('0113', 'background/video/BG0113_1080p.mp4', 'background/thumbnail/TBG0113.jpg', ARRAY[2, 3, 4, 7], false),
+	('0114', 'background/video/BG0114_1080p.mp4', 'background/thumbnail/TBG0114.jpg', ARRAY[4, 7, 9], false),
+	('0121', 'background/video/BG0121_1080p.mp4', 'background/thumbnail/TBG0121.jpg', ARRAY[4, 7], false),
+	('0122', 'background/video/BG0122_1080p.mp4', 'background/thumbnail/TBG0122.jpg', ARRAY[1, 4, 7], false),
+	('0123', 'background/video/BG0123_1080p.mp4', 'background/thumbnail/TBG0123.jpg', ARRAY[2, 3, 4, 7], false),
+	('0124', 'background/video/BG0124_1080p.mp4', 'background/thumbnail/TBG0124.jpg', ARRAY[4, 7, 9], false),
+	('0131', 'background/video/BG0131_1080p.mp4', 'background/thumbnail/TBG0131.jpg', ARRAY[4, 8], false),
+	('0132', 'background/video/BG0132_1080p.mp4', 'background/thumbnail/TBG0132.jpg', ARRAY[1, 4, 8], false),
+	('0133', 'background/video/BG0133_1080p.mp4', 'background/thumbnail/TBG0133.jpg', ARRAY[2, 3, 4, 8], false),
+	('0134', 'background/video/BG0134_1080p.mp4', 'background/thumbnail/TBG0134.jpg', ARRAY[4, 8, 9], false),
+	('0211', 'background/video/BG0211_1080p.mp4', 'background/thumbnail/TBG0211.jpg', ARRAY[4, 5, 7], false),
+	('0212', 'background/video/BG0212_1080p.mp4', 'background/thumbnail/TBG0212.jpg', ARRAY[1, 4, 5, 7], false),
+	('0213', 'background/video/BG0213_1080p.mp4', 'background/thumbnail/TBG0213.jpg', ARRAY[2, 3, 4, 5, 7], false),
+	('0214', 'background/video/BG0214_1080p.mp4', 'background/thumbnail/TBG0214.jpg', ARRAY[4, 5, 7, 9], false),
+	('0221', 'background/video/BG0221_1080p.mp4', 'background/thumbnail/TBG0221.jpg', ARRAY[4, 5, 7], false),
+	('0222', 'background/video/BG0222_1080p.mp4', 'background/thumbnail/TBG0222.jpg', ARRAY[1, 4, 5, 7], false),
+	('0223', 'background/video/BG0223_1080p.mp4', 'background/thumbnail/TBG0223.jpg', ARRAY[2, 3, 4, 5, 7], false),
+	('0224', 'background/video/BG0224_1080p.mp4', 'background/thumbnail/TBG0224.jpg', ARRAY[4, 5, 7, 9], false),
+	('0231', 'background/video/BG0231_1080p.mp4', 'background/thumbnail/TBG0231.jpg', ARRAY[4, 5, 8], false),
+	('0232', 'background/video/BG0232_1080p.mp4', 'background/thumbnail/TBG0232.jpg', ARRAY[1, 4, 5, 8], false),
+	('0233', 'background/video/BG0233_1080p.mp4', 'background/thumbnail/TBG0233.jpg', ARRAY[2, 3, 4, 5, 8], false),
+	('0234', 'background/video/BG0234_1080p.mp4', 'background/thumbnail/TBG0234.jpg', ARRAY[4, 5, 8, 9], false),
+	('0311', 'background/video/BG0311_1080p.mp4', 'background/thumbnail/TBG0311.jpg', ARRAY[4, 6], true),
+	('0312', 'background/video/BG0312_1080p.mp4', 'background/thumbnail/TBG0312.jpg', ARRAY[1, 4, 6], true),
+	('0313', 'background/video/BG0313_1080p.mp4', 'background/thumbnail/TBG0313.jpg', ARRAY[2, 3, 4, 6], true),
+	('0314', 'background/video/BG0314_1080p.mp4', 'background/thumbnail/TBG0314.jpg', ARRAY[4, 6, 9], true),
+	('0321', 'background/video/BG0321_1080p.mp4', 'background/thumbnail/TBG0321.jpg', ARRAY[4, 6], true),
+	('0322', 'background/video/BG0322_1080p.mp4', 'background/thumbnail/TBG0322.jpg', ARRAY[1, 4, 6], true),
+	('0323', 'background/video/BG0323_1080p.mp4', 'background/thumbnail/TBG0323.jpg', ARRAY[2, 3, 4, 6], true),
+	('0324', 'background/video/BG0324_1080p.mp4', 'background/thumbnail/TBG0324.jpg', ARRAY[4, 6, 9], true),
+	('0331', 'background/video/BG0331_1080p.mp4', 'background/thumbnail/TBG0331.jpg', ARRAY[4, 8], true),
+	('0332', 'background/video/BG0332_1080p.mp4', 'background/thumbnail/TBG0332.jpg', ARRAY[1, 4, 8], true),
+	('0333', 'background/video/BG0333_1080p.mp4', 'background/thumbnail/TBG0333.jpg', ARRAY[2, 3, 4, 8], true),
+	('0334', 'background/video/BG0334_1080p.mp4', 'background/thumbnail/TBG0334.jpg', ARRAY[4, 8, 9], true),
+	('0411', 'background/video/BG0411_1080p.mp4', 'background/thumbnail/TBG0411.jpg', Array[4, 11, 13], true),
+	('0412', 'background/video/BG0412_1080p.mp4', 'background/thumbnail/TBG0412.jpg', Array[1, 11, 12, 13], true),
+	('0413', 'background/video/BG0413_1080p.mp4', 'background/thumbnail/TBG0413.jpg', Array[3, 11, 12, 13], true),
+	('0414', 'background/video/BG0414_1080p.mp4', 'background/thumbnail/TBG0414.jpg', Array[9, 11, 13], true),
+	('0421', 'background/video/BG0421_1080p.mp4', 'background/thumbnail/TBG0421.jpg', Array[4, 11, 13], true),
+	('0422', 'background/video/BG0422_1080p.mp4', 'background/thumbnail/TBG0422.jpg', Array[1, 11, 12, 13], true),
+	('0423', 'background/video/BG0423_1080p.mp4', 'background/thumbnail/TBG0423.jpg', Array[3, 11, 12, 13], true),
+	('0424', 'background/video/BG0424_1080p.mp4', 'background/thumbnail/TBG0424.jpg', Array[9, 11, 13], true),
+	('0431', 'background/video/BG0431_1080p.mp4', 'background/thumbnail/TBG0431.jpg', Array[4, 11, 13], true),
+	('0432', 'background/video/BG0432_1080p.mp4', 'background/thumbnail/TBG0432.jpg', Array[1, 11, 12, 13], true),
+	('0433', 'background/video/BG0433_1080p.mp4', 'background/thumbnail/TBG0433.jpg', Array[3, 11, 12, 13], true),
+	('0434', 'background/video/BG0434_1080p.mp4', 'background/thumbnail/TBG0434.jpg', Array[9, 11, 13], true),
+	('0511', 'background/video/BG0511_1080p.mp4', 'background/thumbnail/TBG0511.jpg', Array[11, 13, 14], true),
+	('0512', 'background/video/BG0512_1080p.mp4', 'background/thumbnail/TBG0512.jpg', Array[1, 11, 12, 13, 14], true),
+	('0513', 'background/video/BG0513_1080p.mp4', 'background/thumbnail/TBG0513.jpg', Array[3, 11, 12, 13, 14], true),
+	('0514', 'background/video/BG0514_1080p.mp4', 'background/thumbnail/TBG0514.jpg', Array[9, 11, 13, 14], true),
+	('0521', 'background/video/BG0521_1080p.mp4', 'background/thumbnail/TBG0521.jpg', Array[11, 13, 14], true),
+	('0522', 'background/video/BG0522_1080p.mp4', 'background/thumbnail/TBG0522.jpg', Array[1, 11, 12, 13, 14], true),
+	('0523', 'background/video/BG0523_1080p.mp4', 'background/thumbnail/TBG0523.jpg', Array[3, 11, 12, 13, 14], true),
+	('0524', 'background/video/BG0524_1080p.mp4', 'background/thumbnail/TBG0524.jpg', Array[9, 11, 13, 14], true),
+	('0531', 'background/video/BG0531_1080p.mp4', 'background/thumbnail/TBG0531.jpg', Array[11, 13, 14], true),
+	('0532', 'background/video/BG0532_1080p.mp4', 'background/thumbnail/TBG0532.jpg', Array[1, 11, 12, 13, 14], true),
+	('0533', 'background/video/BG0533_1080p.mp4', 'background/thumbnail/TBG0533.jpg', Array[3, 11, 12, 13, 14], true),
+	('0534', 'background/video/BG0534_1080p.mp4', 'background/thumbnail/TBG0534.jpg', Array[9, 11, 13, 14], true),
+	('0611', 'background/video/BG0611_1080p.mp4', 'background/thumbnail/TBG0611.jpg', Array[11, 15], true),
+	('0612', 'background/video/BG0612_1080p.mp4', 'background/thumbnail/TBG0612.jpg', Array[1, 11, 12, 15], true),
+	('0613', 'background/video/BG0613_1080p.mp4', 'background/thumbnail/TBG0613.jpg', Array[2, 3, 11, 12, 15], true),
+	('0614', 'background/video/BG0614_1080p.mp4', 'background/thumbnail/TBG0614.jpg', Array[9, 11, 15], true),
+	('0621', 'background/video/BG0621_1080p.mp4', 'background/thumbnail/TBG0621.jpg', Array[11, 15], true),
+	('0622', 'background/video/BG0622_1080p.mp4', 'background/thumbnail/TBG0622.jpg', Array[1, 11, 12, 15], true),
+	('0623', 'background/video/BG0623_1080p.mp4', 'background/thumbnail/TBG0623.jpg', Array[2, 3, 11, 12, 15], true),
+	('0624', 'background/video/BG0624_1080p.mp4', 'background/thumbnail/TBG0624.jpg', Array[9, 11, 15], true),
+	('0631', 'background/video/BG0631_1080p.mp4', 'background/thumbnail/TBG0631.jpg', Array[11, 15], true),
+	('0632', 'background/video/BG0632_1080p.mp4', 'background/thumbnail/TBG0632.jpg', Array[1, 11, 12, 15], true),
+	('0633', 'background/video/BG0633_1080p.mp4', 'background/thumbnail/TBG0633.jpg', Array[2, 3, 11, 12, 15], true),
+	('0634', 'background/video/BG0634_1080p.mp4', 'background/thumbnail/TBG0634.jpg', Array[9, 11, 15], true),
+	('0711', 'background/video/BG0711_1080p.mp4', 'background/thumbnail/TBG0711.jpg', Array[11, 15], true),
+	('0712', 'background/video/BG0712_1080p.mp4', 'background/thumbnail/TBG0712.jpg', Array[1, 11, 12, 15], true),
+	('0713', 'background/video/BG0713_1080p.mp4', 'background/thumbnail/TBG0713.jpg', Array[2, 3, 11, 12, 15], true),
+	('0714', 'background/video/BG0714_1080p.mp4', 'background/thumbnail/TBG0714.jpg', Array[9, 11, 15], true),
+	('0721', 'background/video/BG0721_1080p.mp4', 'background/thumbnail/TBG0721.jpg', Array[11, 15], true),
+	('0722', 'background/video/BG0722_1080p.mp4', 'background/thumbnail/TBG0722.jpg', Array[1, 11, 12, 15], true),
+	('0723', 'background/video/BG0723_1080p.mp4', 'background/thumbnail/TBG0723.jpg', Array[2, 3, 11, 12, 15], true),
+	('0724', 'background/video/BG0724_1080p.mp4', 'background/thumbnail/TBG0724.jpg', Array[9, 11, 15], true),
+	('0731', 'background/video/BG0731_1080p.mp4', 'background/thumbnail/TBG0731.jpg', Array[11, 15], true),
+	('0732', 'background/video/BG0732_1080p.mp4', 'background/thumbnail/TBG0732.jpg', Array[1, 11, 12, 15], true),
+	('0733', 'background/video/BG0733_1080p.mp4', 'background/thumbnail/TBG0733.jpg', Array[2, 3, 11, 12, 15], true),
+	('0734', 'background/video/BG0734_1080p.mp4', 'background/thumbnail/TBG0734.jpg', Array[9, 11, 15], true);
+
+INSERT INTO music (music_name, artist_name, file_path, thumbnail_file_path, category_id) VALUES
+	('Summer Breeze', 'Checkpoint Originals', 'music/audio/piano/SteveAiken_SummerBreeze.m4a', 'music/thumbnail/piano/Steve Aiken (1) - Summer Breeze.jpg', 1),
+	('Shine', 'Checkpoint Originals', 'music/audio/piano/klaus_Shine.m4a', 'music/thumbnail/piano/klaüs (1) - Shine.jpg', 1),
+	('The voice of the Wind', 'Checkpoint Originals', 'music/audio/piano/klaus_TheVoiceOfTheWind.m4a', 'music/thumbnail/piano/klaüs (2) - The voice of the wind.jpg', 1),
+	('Ivory', 'Checkpoint Originals', 'music/audio/piano/klaus_Ivory.m4a', 'music/thumbnail/piano/klaüs (3) - Ivory.jpg', 1),
+	('Learn to Fly', 'Checkpoint Originals', 'music/audio/piano/klaus_LearnToFly.m4a', 'music/thumbnail/piano/klaüs (4) - Learn to fly.jpg', 1),
+	('Venus', 'Checkpoint Originals', 'music/audio/piano/klaus_Venus.m4a', 'music/thumbnail/piano/klaüs (5) - Venus.jpg', 1),
+	('I like you', 'Checkpoint Originals', 'music/audio/lofi/FadlanAmada_ILikeYou.m4a', 'music/thumbnail/lofi/Fadlan Amada (2) - I like you.jpg', 2),
+	('New Day', 'Checkpoint Originals', 'music/audio/lofi/FadlanAmada_NewDay.m4a', 'music/thumbnail/lofi/Fadlan Amada (4) - New day.jpg', 2),
+	('Nothing Matters', 'Checkpoint Originals', 'music/audio/lofi/FadlanAmada_NothingMatters.m4a', 'music/thumbnail/lofi/Fadlan Amada (3) - Nothing matters.jpg', 2),
+	('Sunday Afternoon', 'Checkpoint Originals', 'music/audio/lofi/FadlanAmada_SundayAfternoon.m4a', 'music/thumbnail/lofi/Fadlan Amada (1) - Sunday afternoon.jpg', 2),
+	('The Morning', 'Checkpoint Originals', 'music/audio/lofi/FadlanAmada_TheMorning.m4a', 'music/thumbnail/lofi/Fadlan Amada (5) - The morning.jpg', 2),
+	('Moonlight', 'Checkpoint Originals', 'music/audio/lofi/Isehgal_Moonlight.m4a', 'music/thumbnail/lofi/Isehgal (1) - Moonlight.jpg', 2),
+	('Santa is in the South', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_Santa_is_in_the_South.m4a', 'music/thumbnail/jazz/Redapplemusic (1) - Santa is in the South.jpg', 3),
+	('Relaxing on the Couch', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_RelaxingontheCouch.m4a', 'music/thumbnail/jazz/redapplemusic (2) - Relaxing on the Couch.jpg', 3),
+	('Holiday Light', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_HolidayLight.m4a', 'music/thumbnail/jazz/redapplemusic (3) - Holiday Light.jpg', 3),
+	('Holiday by the Beach', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_HolidaybytheBeach.m4a', 'music/thumbnail/jazz/redapplemusic (4) - Holiday by the Beach.jpg', 3),
+	('Nostalgic Memories', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_NostalgicMemories.m4a', 'music/thumbnail/jazz/redapplemusic (5) - Nostalgic Memories.jpg', 3),
+	('Lively Night', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_LivelyNight.m4a', 'music/thumbnail/jazz/redapplemusic (6) - Lively Night.jpg', 3),
+	('Love Awaits Me', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_LoveAwaitsMe.m4a', 'music/thumbnail/jazz/redapplemusic (7) - Love Awaits Me.jpg', 3),
+	('Many Gifts for You', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_ManyGiftsforYou.m4a', 'music/thumbnail/jazz/redapplemusic (8) - Many Gifts for You.jpg', 3),
+	('Aloha', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_Aloha.m4a', 'music/thumbnail/jazz/redapplemusic (9) - Aloha.jpg', 3),
+	('Anniversary Celebration', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_AnniversaryCelebration.m4a', 'music/thumbnail/jazz/redapplemusic (10) - Anniversary Celebration.jpg', 3),
+	('Coco Night', 'Checkpoint Originals', 'music/audio/jazz/Redapplemusic_CocoNight.m4a', 'music/thumbnail/jazz/redapplemusic (11) - Coco Night.jpg', 3);
+
+INSERT INTO music_category (name) VALUES
+	('piano'),
+	('lofi'),
+	('jazz');
