@@ -49,6 +49,7 @@ exports.getResource = (req, res) => {
                   id: music.id,
                   musicName: music.music_name,
                   artistName: music.artist_name,
+                  artistLink: music.artist_link,
                   filePath: music.file_path,
                   thumbnailFilePath: music.thumbnail_file_path,
                   category: music.category_name,
