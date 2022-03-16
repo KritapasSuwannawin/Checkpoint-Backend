@@ -539,7 +539,29 @@ exports.memberSetting = (req, res) => {
             postgresql.query(
               `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}]::integer[], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
               (err, result) => {
-                res.json({});
+                const selectMemberPromise = new Promise((resolve, reject) => {
+                  postgresql.query(`SELECT * FROM member WHERE id = ${memberId};`, (err, result) => {
+                    const currentTime = new Date().getTime();
+                    const premiumExpirationTime = new Date(result.rows[0].premium_expiration_date).getTime();
+
+                    resolve(
+                      result
+                        ? result.rows.map((member) => {
+                            return {
+                              isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
+                              premiumExpirationDate: member.premium_expiration_date,
+                            };
+                          })
+                        : err
+                    );
+                  });
+                });
+
+                selectMemberPromise.then((data) => {
+                  res.json({
+                    data,
+                  });
+                });
               }
             );
           } else {
