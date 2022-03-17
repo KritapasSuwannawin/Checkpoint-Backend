@@ -530,7 +530,16 @@ exports.memberSetting = (req, res) => {
   } else {
     if (Math.floor(onlineDuration / 1000) === 0) {
       postgresql.query(`UPDATE member SET current_device_id = '${deviceId}' WHERE id = ${memberId};`, (err, result) => {
-        res.json({});
+        postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
+          const premiumExpirationDate = result.rows[0].premium_expiration_date;
+          const currentTime = new Date().getTime();
+          const premiumExpirationTime = new Date(premiumExpirationDate).getTime();
+
+          res.json({
+            isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
+            premiumExpirationDate,
+          });
+        });
       });
     } else {
       postgresql.query(`SELECT current_device_id FROM member WHERE id = ${memberId};`, (err, result) => {
@@ -539,27 +548,14 @@ exports.memberSetting = (req, res) => {
             postgresql.query(
               `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}]::integer[], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
               (err, result) => {
-                const selectMemberPromise = new Promise((resolve, reject) => {
-                  postgresql.query(`SELECT * FROM member WHERE id = ${memberId};`, (err, result) => {
-                    const currentTime = new Date().getTime();
-                    const premiumExpirationTime = new Date(result.rows[0].premium_expiration_date).getTime();
+                postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
+                  const premiumExpirationDate = result.rows[0].premium_expiration_date;
+                  const currentTime = new Date().getTime();
+                  const premiumExpirationTime = new Date(premiumExpirationDate).getTime();
 
-                    resolve(
-                      result
-                        ? result.rows.map((member) => {
-                            return {
-                              isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
-                              premiumExpirationDate: member.premium_expiration_date,
-                            };
-                          })
-                        : err
-                    );
-                  });
-                });
-
-                selectMemberPromise.then((data) => {
                   res.json({
-                    data,
+                    isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
+                    premiumExpirationDate,
                   });
                 });
               }

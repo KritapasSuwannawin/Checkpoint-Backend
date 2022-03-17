@@ -390,6 +390,14 @@ INSERT INTO music (music_name, artist_name, artist_link, file_path, thumbnail_fi
 	('Anniversary Celebration', 'Checkpoint Originals', 'https://www.checkpoint.tokyo/about', 'music/audio/jazz/Redapplemusic_AnniversaryCelebration.m4a', 'music/thumbnail/jazz/redapplemusic (10) - Anniversary Celebration.jpg', 3),
 	('Coco Night', 'Checkpoint Originals', 'https://www.checkpoint.tokyo/about', 'music/audio/jazz/Redapplemusic_CocoNight.m4a', 'music/thumbnail/jazz/redapplemusic (11) - Coco Night.jpg', 3);
 
+INSERT INTO music (music_name, artist_name, artist_link, file_path, thumbnail_file_path, category_id) VALUES
+	('Rainfall', 'Ruihau Lu', 'https://music.163.com/?fbclid=IwAR2-L9sZiHpbYzXHBU_jmHSecloGwujE930ocCVeXMIwwJs8A1nhfef5l9E#/artist?id=12405941', 'music/audio/jazz/Ruihau Lu - Rainfall.m4a', 'music/thumbnail/jazz/Ruihau Lu - Rainfall.jpg', 3),
+	('Clear Sky', 'Ruihau Lu', 'https://music.163.com/?fbclid=IwAR2-L9sZiHpbYzXHBU_jmHSecloGwujE930ocCVeXMIwwJs8A1nhfef5l9E#/artist?id=12405941', 'music/audio/piano/Ruihau Lu - Clear Sky.m4a', 'music/thumbnail/piano/Ruihau Lu - Clear Sky.jpg', 1),
+	('I Gaze Upon The Ethereal Stars', 'Ruihau Lu', 'https://music.163.com/?fbclid=IwAR2-L9sZiHpbYzXHBU_jmHSecloGwujE930ocCVeXMIwwJs8A1nhfef5l9E#/artist?id=12405941', 'music/audio/piano/Ruihau Lu - I Gaze Upon The Ethereal Stars.m4a', 'music/thumbnail/piano/Ruihau Lu - I Gaze Upon The Ethereal Stars.jpg', 1),
+	('Love Without Answer', 'Ruihau Lu', 'https://music.163.com/?fbclid=IwAR2-L9sZiHpbYzXHBU_jmHSecloGwujE930ocCVeXMIwwJs8A1nhfef5l9E#/artist?id=12405941', 'music/audio/piano/Ruihau Lu - Love Without Answer.m4a', 'music/thumbnail/piano/Ruihau Lu - Love Without Answer.jpg', 1),
+	('Sunrise', 'Ruihau Lu', 'https://music.163.com/?fbclid=IwAR2-L9sZiHpbYzXHBU_jmHSecloGwujE930ocCVeXMIwwJs8A1nhfef5l9E#/artist?id=12405941', 'music/audio/piano/Ruihau Lu - Sunrise.m4a', 'music/thumbnail/piano/Ruihau Lu - Sunrise.jpg', 1),
+	('The Distance', 'Ruihau Lu', 'https://music.163.com/?fbclid=IwAR2-L9sZiHpbYzXHBU_jmHSecloGwujE930ocCVeXMIwwJs8A1nhfef5l9E#/artist?id=12405941', 'music/audio/piano/Ruihau Lu - The Distance.m4a', 'music/thumbnail/piano/Ruihau Lu - The Distance.jpg', 1);
+
 INSERT INTO music_category (name) VALUES
 	('piano'),
 	('lofi'),
