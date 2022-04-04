@@ -402,3 +402,22 @@ INSERT INTO music_category (name) VALUES
 	('piano'),
 	('lofi'),
 	('jazz');
+
+--- add BG08 ---
+
+INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
+	('Magic Keyboard', 'ambient/audio/Magic_Keyboard.m4a', 'ambient/thumbnail/TAB_Magic_Keyboard.jpg', 0.25, 'Magicキーボード');
+
+INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_premium) VALUES
+	('0811', 'background/video/Bg0811_1080p.mp4', 'background/thumbnail/TBG0811.jpg', ARRAY[4, 5, 7, 11, 16], true),
+	('0812', 'background/video/Bg0812_1080p.mp4', 'background/thumbnail/TBG0812.jpg', ARRAY[1, 4, 5, 7, 11, 16], true),
+	('0813', 'background/video/Bg0813_1080p.mp4', 'background/thumbnail/TBG0813.jpg', ARRAY[2, 3, 4, 5, 7, 11, 16], true),
+	('0814', 'background/video/Bg0814_1080p.mp4', 'background/thumbnail/TBG0814.jpg', ARRAY[4, 5, 7, 9, 11, 16], true),
+	('0821', 'background/video/Bg0821_1080p.mp4', 'background/thumbnail/TBG0821.jpg', ARRAY[4, 5, 7, 11, 16], true),
+	('0822', 'background/video/Bg0822_1080p.mp4', 'background/thumbnail/TBG0822.jpg', ARRAY[1, 4, 5, 7, 11, 16], true),
+	('0823', 'background/video/Bg0823_1080p.mp4', 'background/thumbnail/TBG0823.jpg', ARRAY[2, 3, 4, 5, 7, 11, 16], true),
+	('0824', 'background/video/Bg0824_1080p.mp4', 'background/thumbnail/TBG0824.jpg', ARRAY[4, 5, 7, 9, 11, 16], true),
+	('0831', 'background/video/Bg0831_1080p.mp4', 'background/thumbnail/TBG0831.jpg', ARRAY[4, 5, 8, 11, 16], true),
+	('0832', 'background/video/Bg0832_1080p.mp4', 'background/thumbnail/TBG0832.jpg', ARRAY[1, 4, 5, 8, 11, 16], true),
+	('0833', 'background/video/Bg0833_1080p.mp4', 'background/thumbnail/TBG0833.jpg', ARRAY[2, 3, 4, 5, 8, 11, 16], true),
+	('0834', 'background/video/Bg0834_1080p.mp4', 'background/thumbnail/TBG0834.jpg', ARRAY[4, 5, 8, 9, 11, 16], true);
