@@ -768,53 +768,109 @@ exports.memberPayment = (req, res) => {
 exports.memberActivation = (req, res) => {
   const { memberId, activationCode } = req.body;
 
-  postgresql.query(`SELECT is_activated, month FROM coupon WHERE code = '${activationCode}';`, (err, result) => {
-    if (result) {
-      if (result.rows.length === 1) {
-        const { is_activated, month } = result.rows[0];
-        if (is_activated) {
-          res.json({
-            message: 'code already used',
-          });
-        } else {
-          postgresql.query(`UPDATE coupon SET is_activated = true WHERE code = '${activationCode}';`, (err, result) => {
-            if (err) {
-              res.json({
-                message: 'error during authentication',
-              });
-            } else {
-              postgresql.query(`CALL activate_member(${memberId}, ${month});`, (err, result) => {
+  if (activationCode.length > 10) {
+    postgresql.query(`SELECT month, member_id_arr FROM coupon_special WHERE code = '${activationCode}';`, (err, result) => {
+      if (result) {
+        if (result.rows.length === 1) {
+          const { month, member_id_arr } = result.rows[0];
+          if (member_id_arr.includes(memberId)) {
+            res.json({
+              message: 'code already used',
+            });
+          } else {
+            member_id_arr.push(memberId);
+            postgresql.query(
+              `UPDATE coupon_special SET member_id_arr = ARRAY[${member_id_arr}]::integer[] WHERE code = '${activationCode}';`,
+              (err, result) => {
                 if (err) {
                   res.json({
                     message: 'error during authentication',
                   });
                 } else {
-                  postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
+                  postgresql.query(`CALL activate_member(${memberId}, ${month});`, (err, result) => {
                     if (err) {
                       res.json({
                         message: 'error during authentication',
                       });
                     } else {
-                      res.json({
-                        month,
-                        premiumExpirationDate: result.rows[0].premium_expiration_date,
+                      postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
+                        if (err) {
+                          res.json({
+                            message: 'error during authentication',
+                          });
+                        } else {
+                          res.json({
+                            month,
+                            premiumExpirationDate: result.rows[0].premium_expiration_date,
+                          });
+                        }
                       });
                     }
                   });
                 }
-              });
-            }
+              }
+            );
+          }
+        } else {
+          res.json({
+            message: 'invalid code',
           });
         }
       } else {
         res.json({
-          message: 'invalid code',
+          message: 'error during authentication',
         });
       }
-    } else {
-      res.json({
-        message: 'error during authentication',
-      });
-    }
-  });
+    });
+  } else {
+    postgresql.query(`SELECT is_activated, month FROM coupon WHERE code = '${activationCode}';`, (err, result) => {
+      if (result) {
+        if (result.rows.length === 1) {
+          const { is_activated, month } = result.rows[0];
+          if (is_activated) {
+            res.json({
+              message: 'code already used',
+            });
+          } else {
+            postgresql.query(`UPDATE coupon SET is_activated = true WHERE code = '${activationCode}';`, (err, result) => {
+              if (err) {
+                res.json({
+                  message: 'error during authentication',
+                });
+              } else {
+                postgresql.query(`CALL activate_member(${memberId}, ${month});`, (err, result) => {
+                  if (err) {
+                    res.json({
+                      message: 'error during authentication',
+                    });
+                  } else {
+                    postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
+                      if (err) {
+                        res.json({
+                          message: 'error during authentication',
+                        });
+                      } else {
+                        res.json({
+                          month,
+                          premiumExpirationDate: result.rows[0].premium_expiration_date,
+                        });
+                      }
+                    });
+                  }
+                });
+              }
+            });
+          }
+        } else {
+          res.json({
+            message: 'invalid code',
+          });
+        }
+      } else {
+        res.json({
+          message: 'error during authentication',
+        });
+      }
+    });
+  }
 };

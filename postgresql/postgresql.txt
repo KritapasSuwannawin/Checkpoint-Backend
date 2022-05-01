@@ -421,3 +421,53 @@ INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_p
 	('0832', 'background/video/Bg0832_1080p.mp4', 'background/thumbnail/TBG0832.jpg', ARRAY[1, 4, 5, 8, 11, 16], true),
 	('0833', 'background/video/Bg0833_1080p.mp4', 'background/thumbnail/TBG0833.jpg', ARRAY[2, 3, 4, 5, 8, 11, 16], true),
 	('0834', 'background/video/Bg0834_1080p.mp4', 'background/thumbnail/TBG0834.jpg', ARRAY[4, 5, 8, 9, 11, 16], true);
+
+--- change free trial to 7 days ---
+
+DROP PROCEDURE IF EXISTS public.add_new_member(character varying, character varying, character varying, character varying, boolean);
+
+CREATE OR REPLACE PROCEDURE public.add_new_member(
+	in_email character varying,
+	in_password character varying,
+	in_login_method character varying,
+	in_username character varying,
+	in_receive_news boolean)
+LANGUAGE 'plpgsql'
+AS $BODY$
+begin
+	INSERT INTO member_authentication (email, password, login_method) values (in_email, MD5(in_password), in_login_method);
+	INSERT INTO member (username, avatar_id, receive_news, registration_date, premium_expiration_date) values (in_username, 1, in_receive_news, current_date, current_date + interval '7 day');
+	INSERT INTO member_setting (background_id, music_id, music_category_id, favourite_music_id_arr, play_from_playlist) 
+		values ('0411', 13, NULL, ARRAY[]::integer[], FALSE);
+end;
+$BODY$;
+
+--- add BG09 ---
+INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
+	('Mechanical Keyboard', 'ambient/audio/Mechanical_Keyboard.m4a', 'ambient/thumbnail/TAB_Mechanical Keyboard.jpg', 0.25, 'Mechanicalキーボード'),
+	('Port Town', 'ambient/audio/Port_Town.m4a', 'ambient/thumbnail/TAB_Port_Town.jpg', 0.15, '港町');
+
+INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_premium) VALUES
+	('0911', 'background/video/Bg0911_1080p.mp4', 'background/thumbnail/TBG0911.jpg', ARRAY[4, 10, 18], true),
+	('0912', 'background/video/Bg0912_1080p.mp4', 'background/thumbnail/TBG0912.jpg', ARRAY[1, 4, 10, 12, 18], true),
+	('0913', 'background/video/Bg0913_1080p.mp4', 'background/thumbnail/TBG0913.jpg', ARRAY[2, 3, 4, 10, 12, 18], true),
+	('0914', 'background/video/Bg0914_1080p.mp4', 'background/thumbnail/TBG0914.jpg', ARRAY[4, 9, 10, 18], true),
+	('0921', 'background/video/Bg0921_1080p.mp4', 'background/thumbnail/TBG0921.jpg', ARRAY[4, 10, 18], true),
+	('0922', 'background/video/Bg0922_1080p.mp4', 'background/thumbnail/TBG0922.jpg', ARRAY[1, 4, 10, 12, 18], true),
+	('0923', 'background/video/Bg0923_1080p.mp4', 'background/thumbnail/TBG0923.jpg', ARRAY[2, 3, 4, 10, 12, 18], true),
+	('0924', 'background/video/Bg0924_1080p.mp4', 'background/thumbnail/TBG0924.jpg', ARRAY[4, 9, 10, 18], true),
+	('0931', 'background/video/Bg0931_1080p.mp4', 'background/thumbnail/TBG0931.jpg', ARRAY[4, 8, 10, 18], true),
+	('0932', 'background/video/Bg0932_1080p.mp4', 'background/thumbnail/TBG0932.jpg', ARRAY[1, 4, 8, 10, 12, 18], true),
+	('0933', 'background/video/Bg0933_1080p.mp4', 'background/thumbnail/TBG0933.jpg', ARRAY[2, 3, 4, 8, 10, 12, 18], true),
+	('0934', 'background/video/Bg0934_1080p.mp4', 'background/thumbnail/TBG0934.jpg', ARRAY[4, 8, 9, 10, 18], true);
+
+--- create coupon_special table ---
+
+CREATE TABLE IF NOT EXISTS public.coupon_special
+(
+    id SERIAL,
+    code character varying(255),
+    month integer,
+		member_id_arr integer[],
+    CONSTRAINT coupon_special_pkey PRIMARY KEY (id)
+);
