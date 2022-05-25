@@ -443,6 +443,7 @@ end;
 $BODY$;
 
 --- add BG09 ---
+
 INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
 	('Mechanical Keyboard', 'ambient/audio/Mechanical_Keyboard.m4a', 'ambient/thumbnail/TAB_Mechanical Keyboard.jpg', 0.25, 'Mechanicalキーボード'),
 	('Port Town', 'ambient/audio/Port_Town.m4a', 'ambient/thumbnail/TAB_Port_Town.jpg', 0.15, '港町');
@@ -471,3 +472,50 @@ CREATE TABLE IF NOT EXISTS public.coupon_special
 		member_id_arr integer[],
     CONSTRAINT coupon_special_pkey PRIMARY KEY (id)
 );
+
+--- music mood ---
+
+CREATE TABLE IF NOT EXISTS public.music_mood
+(
+    id SERIAL,
+    name character varying(255),
+		file_path character varying(255)
+);
+
+INSERT INTO music_mood (name, file_path) VALUES
+	('focus', 'mood/Focus.jpg'),
+	('sleep', 'mood/Sleep.jpg'),
+	('chill', 'mood/Chill.jpg'),
+	('cafe', 'mood/Cafe.jpg');
+
+ALTER TABLE music ADD COLUMN mood_id_arr integer[];
+
+UPDATE music SET mood_id_arr = ARRAY[2, 3] WHERE id = 1;
+UPDATE music SET mood_id_arr = ARRAY[2, 3] WHERE id = 2;
+UPDATE music SET mood_id_arr = ARRAY[1, 2, 3] WHERE id = 3;
+UPDATE music SET mood_id_arr = ARRAY[1, 2, 3] WHERE id = 4;
+UPDATE music SET mood_id_arr = ARRAY[1, 2, 3] WHERE id = 5;
+UPDATE music SET mood_id_arr = ARRAY[1, 2, 3] WHERE id = 6;
+UPDATE music SET mood_id_arr = ARRAY[1] WHERE id = 7;
+UPDATE music SET mood_id_arr = ARRAY[1] WHERE id = 8;
+UPDATE music SET mood_id_arr = ARRAY[1] WHERE id = 9;
+UPDATE music SET mood_id_arr = ARRAY[1] WHERE id = 10;
+UPDATE music SET mood_id_arr = ARRAY[1] WHERE id = 11;
+UPDATE music SET mood_id_arr = ARRAY[1] WHERE id = 12;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 13;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 14;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 15;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 16;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 17;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 18;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 19;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 20;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 21;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 22;
+UPDATE music SET mood_id_arr = ARRAY[3, 4] WHERE id = 23;
+UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 24;
+UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 25;
+UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 26;
+UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 27;
+UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 28;
+UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 29;

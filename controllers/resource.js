@@ -53,6 +53,7 @@ exports.getResource = (req, res) => {
                   filePath: music.file_path,
                   thumbnailFilePath: music.thumbnail_file_path,
                   category: music.category_name,
+                  moodIdArr: music.mood_id_arr,
                 };
               })
             : err
@@ -76,13 +77,30 @@ exports.getResource = (req, res) => {
     });
   });
 
-  Promise.all([ambientPromise, backgroundPromise, musicPromise, avatarPromise]).then((values) => {
+  const moodPromise = new Promise((resolve, reject) => {
+    postgresql.query('SELECT * FROM music_mood ORDER BY id;', (err, result) => {
+      resolve(
+        result
+          ? result.rows.map((mood) => {
+              return {
+                id: mood.id,
+                name: mood.name,
+                filePath: mood.file_path,
+              };
+            })
+          : err
+      );
+    });
+  });
+
+  Promise.all([ambientPromise, backgroundPromise, musicPromise, avatarPromise, moodPromise]).then((values) => {
     res.json({
       data: {
         ambient: values[0],
         background: values[1],
         music: values[2],
         avatar: values[3],
+        mood: values[4],
       },
     });
   });
