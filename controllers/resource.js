@@ -1,6 +1,6 @@
 const postgresql = require('../postgresql/postgresql');
 
-exports.getResource = (req, res) => {
+exports.getResource = async (req, res) => {
   const ambientPromise = new Promise((resolve, reject) => {
     postgresql.query('SELECT * FROM ambient ORDER BY id;', (err, result) => {
       resolve(
@@ -15,7 +15,7 @@ exports.getResource = (req, res) => {
                 volume: Number(ambient.volume),
               };
             })
-          : err
+          : []
       );
     });
   });
@@ -33,7 +33,7 @@ exports.getResource = (req, res) => {
                 isPremium: background.is_premium,
               };
             })
-          : err
+          : []
       );
     });
   });
@@ -56,7 +56,7 @@ exports.getResource = (req, res) => {
                   moodIdArr: music.mood_id_arr,
                 };
               })
-            : err
+            : []
         );
       }
     );
@@ -72,7 +72,7 @@ exports.getResource = (req, res) => {
                 filePath: avatar.file_path,
               };
             })
-          : err
+          : []
       );
     });
   });
@@ -88,20 +88,20 @@ exports.getResource = (req, res) => {
                 filePath: mood.file_path,
               };
             })
-          : err
+          : []
       );
     });
   });
 
-  Promise.all([ambientPromise, backgroundPromise, musicPromise, avatarPromise, moodPromise]).then((values) => {
-    res.json({
-      data: {
-        ambient: values[0],
-        background: values[1],
-        music: values[2],
-        avatar: values[3],
-        mood: values[4],
-      },
-    });
+  const dataArr = await Promise.all([ambientPromise, backgroundPromise, musicPromise, avatarPromise, moodPromise]);
+
+  res.json({
+    data: {
+      ambient: dataArr[0],
+      background: dataArr[1],
+      music: dataArr[2],
+      avatar: dataArr[3],
+      mood: dataArr[4],
+    },
   });
 };

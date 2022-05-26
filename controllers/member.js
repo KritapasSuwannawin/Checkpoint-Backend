@@ -95,15 +95,13 @@ function sendMail(to, type, verificationCode, isJapanese = false) {
 }
 
 exports.memberVerification = (req, res) => {
-  const email = req.body.email;
-  const loginMethod = req.body.loginMethod;
-  const isJapanese = req.body.isJapanese;
+  const { email, loginMethod, isJapanese, isMobile } = req.body;
 
   const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
     postgresql.query(`SELECT * FROM member_authentication WHERE email = '${email}' and login_method = '${loginMethod}';`, (err, result) => {
-      resolve(
-        result
-          ? result.rows.map((memberAuthentication) => {
+      result
+        ? resolve(
+            result.rows.map((memberAuthentication) => {
               return {
                 id: memberAuthentication.id,
                 email: memberAuthentication.email,
@@ -111,120 +109,65 @@ exports.memberVerification = (req, res) => {
                 loginMethod: memberAuthentication.login_method,
               };
             })
-          : err
-      );
+          )
+        : reject(err);
     });
   });
 
-  selectMemberAuthenticationPromise.then((data) => {
-    if (data.length === 0) {
-      function makeId(length) {
-        let result = '';
-        const characters = '0123456789';
-        const charactersLength = characters.length;
-        for (let i = 0; i < length; i++) {
-          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  selectMemberAuthenticationPromise
+    .then((data) => {
+      if (data.length === 0) {
+        function makeId(length) {
+          let result = '';
+          const characters = '0123456789';
+          const charactersLength = characters.length;
+          for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+          }
+          return result;
         }
-        return result;
-      }
 
-      const verificationCode = makeId(6);
-      const sendMailPromise = sendMail(email, 'memberVerification', verificationCode, isJapanese);
+        const verificationCode = makeId(6);
+        const sendMailPromise = sendMail(email, 'memberVerification', verificationCode, isJapanese);
 
-      sendMailPromise
-        .then(() => {
-          res.json({
-            verificationCode: crypto.AES.encrypt(verificationCode, process.env.checkpoint_security_key).toString(),
+        sendMailPromise
+          .then(() => {
+            res.json({
+              verificationCode: !isMobile
+                ? crypto.AES.encrypt(verificationCode, process.env.checkpoint_security_key).toString()
+                : verificationCode,
+            });
+          })
+          .catch(() => {
+            res.json({
+              message: 'error during authentication',
+            });
           });
-        })
-        .catch(() => {
-          res.json({
-            message: 'error during authentication',
-          });
+      } else if (data.length === 1) {
+        res.json({
+          message: 'account already exist',
         });
-    } else if (data.length === 1) {
-      res.json({
-        message: 'account already exist',
-      });
-    } else {
+      } else {
+        res.json({
+          message: 'error during authentication',
+        });
+      }
+    })
+    .catch(() => {
       res.json({
         message: 'error during authentication',
       });
-    }
-  });
-};
-
-exports.memberVerificationMobile = (req, res) => {
-  const email = req.body.email;
-  const loginMethod = req.body.loginMethod;
-  const isJapanese = req.body.isJapanese;
-
-  const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
-    postgresql.query(`SELECT * FROM member_authentication WHERE email = '${email}' and login_method = '${loginMethod}';`, (err, result) => {
-      resolve(
-        result
-          ? result.rows.map((memberAuthentication) => {
-              return {
-                id: memberAuthentication.id,
-                email: memberAuthentication.email,
-                password: memberAuthentication.password,
-                loginMethod: memberAuthentication.login_method,
-              };
-            })
-          : err
-      );
     });
-  });
-
-  selectMemberAuthenticationPromise.then((data) => {
-    if (data.length === 0) {
-      function makeId(length) {
-        let result = '';
-        const characters = '0123456789';
-        const charactersLength = characters.length;
-        for (let i = 0; i < length; i++) {
-          result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
-        return result;
-      }
-
-      const verificationCode = makeId(6);
-      const sendMailPromise = sendMail(email, 'memberVerification', verificationCode, isJapanese);
-
-      sendMailPromise
-        .then(() => {
-          res.json({
-            verificationCode,
-          });
-        })
-        .catch(() => {
-          res.json({
-            message: 'error during authentication',
-          });
-        });
-    } else if (data.length === 1) {
-      res.json({
-        message: 'account already exist',
-      });
-    } else {
-      res.json({
-        message: 'error during authentication',
-      });
-    }
-  });
 };
 
 exports.memberSignUp = (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const loginMethod = req.body.loginMethod;
-  const receiveNews = req.body.receiveNews;
+  const { email, password, loginMethod, receiveNews } = req.body;
 
   const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
     postgresql.query(`SELECT * FROM member_authentication WHERE email = '${email}' and login_method = '${loginMethod}';`, (err, result) => {
-      resolve(
-        result
-          ? result.rows.map((memberAuthentication) => {
+      result
+        ? resolve(
+            result.rows.map((memberAuthentication) => {
               return {
                 id: memberAuthentication.id,
                 email: memberAuthentication.email,
@@ -232,75 +175,79 @@ exports.memberSignUp = (req, res) => {
                 loginMethod: memberAuthentication.login_method,
               };
             })
-          : err
-      );
+          )
+        : reject(err);
     });
   });
 
-  selectMemberAuthenticationPromise.then((data) => {
-    if (data.length === 0) {
-      const addNewMemberPromise = new Promise((resolve, reject) => {
-        postgresql.query(
-          `CALL add_new_member('${email}', '${password}', '${loginMethod}', '${email.split('@')[0]}', ${receiveNews});`,
-          (err, result) => {
-            resolve(result ? result : err);
-          }
-        );
-      });
-
-      addNewMemberPromise.then(() => {
-        const selectMemberPromise = new Promise((resolve, reject) => {
+  selectMemberAuthenticationPromise
+    .then((data) => {
+      if (data.length === 0) {
+        const addNewMemberPromise = new Promise((resolve, reject) => {
           postgresql.query(
-            `SELECT * FROM member m
-            WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
+            `CALL add_new_member('${email}', '${password}', '${loginMethod}', '${email.split('@')[0]}', ${receiveNews});`,
             (err, result) => {
-              resolve(
-                result
-                  ? result.rows.map((member) => {
-                      return {
-                        id: member.id,
-                        email,
-                        username: member.username,
-                        avatarId: member.avatar_id,
-                        isPremium: true,
-                        registrationDate: member.registration_date,
-                        premiumExpirationDate: member.premium_expiration_date,
-                      };
-                    })
-                  : err
-              );
+              resolve(result ? result : err);
             }
           );
         });
 
-        selectMemberPromise.then((data) => {
-          res.json({
-            data,
+        addNewMemberPromise.then(() => {
+          const selectMemberPromise = new Promise((resolve, reject) => {
+            postgresql.query(
+              `SELECT * FROM member m
+            WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
+              (err, result) => {
+                resolve(
+                  result
+                    ? result.rows.map((member) => {
+                        return {
+                          id: member.id,
+                          email,
+                          username: member.username,
+                          avatarId: member.avatar_id,
+                          isPremium: true,
+                          registrationDate: member.registration_date,
+                          premiumExpirationDate: member.premium_expiration_date,
+                        };
+                      })
+                    : err
+                );
+              }
+            );
+          });
+
+          selectMemberPromise.then((data) => {
+            res.json({
+              data,
+            });
           });
         });
-      });
-    } else if (data.length === 1) {
-      res.json({
-        message: 'account already exist',
-      });
-    } else {
+      } else if (data.length === 1) {
+        res.json({
+          message: 'account already exist',
+        });
+      } else {
+        res.json({
+          message: 'error during authentication',
+        });
+      }
+    })
+    .catch(() => {
       res.json({
         message: 'error during authentication',
       });
-    }
-  });
+    });
 };
 
 exports.memberSignIn = (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const loginMethod = req.body.loginMethod;
+  const { email, password, loginMethod } = req.body;
 
   const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
     postgresql.query(`SELECT * FROM member_authentication WHERE email = '${email}' and login_method = '${loginMethod}';`, (err, result) => {
-      resolve(
-        result
-          ? result.rows.map((memberAuthentication) => {
+      result
+        ? resolve(
+            result.rows.map((memberAuthentication) => {
               return {
                 id: memberAuthentication.id,
                 email: memberAuthentication.email,
@@ -308,89 +255,94 @@ exports.memberSignIn = (req, res) => {
                 loginMethod: memberAuthentication.login_method,
               };
             })
-          : err
-      );
+          )
+        : reject(err);
     });
   });
 
-  selectMemberAuthenticationPromise.then((data) => {
-    if (data.length === 0) {
-      res.json({
-        message: 'account not exist',
-      });
-    } else if (data.length === 1) {
-      postgresql.query(`SELECT verify_password('${password}', '${email}', '${loginMethod}') AS verification;`, (err, result) => {
-        if (result) {
-          if (!result.rows[0].verification) {
-            res.json({
-              message: 'incorrect password',
-            });
-          } else {
-            const selectMemberPromise = new Promise((resolve, reject) => {
-              postgresql.query(
-                `SELECT m.*, ms.background_id, ms.music_id, ms.music_category_id, ms.favourite_music_id_arr, ms.play_from_playlist, mc.name AS music_category
+  selectMemberAuthenticationPromise
+    .then((data) => {
+      if (data.length === 0) {
+        res.json({
+          message: 'account not exist',
+        });
+      } else if (data.length === 1) {
+        postgresql.query(`SELECT verify_password('${password}', '${email}', '${loginMethod}') AS verification;`, (err, result) => {
+          if (result) {
+            if (!result.rows[0].verification) {
+              res.json({
+                message: 'incorrect password',
+              });
+            } else {
+              const selectMemberPromise = new Promise((resolve, reject) => {
+                postgresql.query(
+                  `SELECT m.*, ms.background_id, ms.music_id, ms.music_category_id, ms.favourite_music_id_arr, ms.play_from_playlist, mc.name AS music_category
                   FROM member m 
                   INNER JOIN member_setting ms ON m.id = ms.id
                   LEFT JOIN music_category mc ON ms.music_category_id = mc.id
                   WHERE m.id = (SELECT id FROM member_authentication WHERE email = '${email}' AND password = MD5('${password}') AND login_method = '${loginMethod}');`,
-                (err, result) => {
-                  const currentTime = new Date().getTime();
-                  const premiumExpirationTime = new Date(result.rows[0].premium_expiration_date).getTime();
+                  (err, result) => {
+                    const currentTime = new Date().getTime();
+                    const premiumExpirationTime = new Date(result.rows[0].premium_expiration_date).getTime();
 
-                  resolve(
-                    result
-                      ? result.rows.map((member) => {
-                          return {
-                            id: member.id,
-                            email,
-                            username: member.username,
-                            avatarId: member.avatar_id,
-                            isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
-                            registrationDate: member.registration_date,
-                            premiumExpirationDate: member.premium_expiration_date,
-                            backgroundId: member.background_id,
-                            musicId: member.music_id,
-                            musicCategoryId: member.music_category_id,
-                            musicCategory: member.music_category,
-                            favouriteMusicIdArr: member.favourite_music_id_arr,
-                            playFromPlaylist: member.play_from_playlist,
-                          };
-                        })
-                      : err
-                  );
-                }
-              );
-            });
-
-            selectMemberPromise.then((data) => {
-              res.json({
-                data,
+                    resolve(
+                      result
+                        ? result.rows.map((member) => {
+                            return {
+                              id: member.id,
+                              email,
+                              username: member.username,
+                              avatarId: member.avatar_id,
+                              isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
+                              registrationDate: member.registration_date,
+                              premiumExpirationDate: member.premium_expiration_date,
+                              backgroundId: member.background_id,
+                              musicId: member.music_id,
+                              musicCategoryId: member.music_category_id,
+                              musicCategory: member.music_category,
+                              favouriteMusicIdArr: member.favourite_music_id_arr,
+                              playFromPlaylist: member.play_from_playlist,
+                            };
+                          })
+                        : err
+                    );
+                  }
+                );
               });
+
+              selectMemberPromise.then((data) => {
+                res.json({
+                  data,
+                });
+              });
+            }
+          } else {
+            res.json({
+              message: 'error during authentication',
             });
           }
-        } else {
-          res.json({
-            message: 'error during authentication',
-          });
-        }
-      });
-    } else {
+        });
+      } else {
+        res.json({
+          message: 'error during authentication',
+        });
+      }
+    })
+    .catch(() => {
       res.json({
         message: 'error during authentication',
       });
-    }
-  });
+    });
 };
 
 exports.memberForgetPassword = (req, res) => {
-  const { email } = req.body;
-  const isJapanese = req.body.isJapanese;
+  const { email, isJapanese, isMobile } = req.body;
 
   const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
     postgresql.query(`SELECT * FROM member_authentication WHERE email = '${email}' and login_method = 'email';`, (err, result) => {
-      resolve(
-        result
-          ? result.rows.map((memberAuthentication) => {
+      result
+        ? resolve(
+            result.rows.map((memberAuthentication) => {
               return {
                 id: memberAuthentication.id,
                 email: memberAuthentication.email,
@@ -398,106 +350,55 @@ exports.memberForgetPassword = (req, res) => {
                 loginMethod: memberAuthentication.login_method,
               };
             })
-          : err
-      );
+          )
+        : reject(err);
     });
   });
 
-  selectMemberAuthenticationPromise.then((data) => {
-    if (data.length === 0) {
-      res.json({
-        message: 'account not exist',
-      });
-    } else if (data.length === 1) {
-      function makeId(length) {
-        let result = '';
-        const characters = '0123456789';
-        const charactersLength = characters.length;
-        for (let i = 0; i < length; i++) {
-          result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
-        return result;
-      }
-
-      const verificationCode = makeId(6);
-      const sendMailPromise = sendMail(email, 'memberForgetPassword', verificationCode, isJapanese);
-
-      sendMailPromise
-        .then(() => {
-          res.json({
-            verificationCode: crypto.AES.encrypt(verificationCode, process.env.checkpoint_security_key).toString(),
-          });
-        })
-        .catch(() => {
-          res.json({
-            message: 'error during authentication',
-          });
+  selectMemberAuthenticationPromise
+    .then((data) => {
+      if (data.length === 0) {
+        res.json({
+          message: 'account not exist',
         });
-    } else {
+      } else if (data.length === 1) {
+        function makeId(length) {
+          let result = '';
+          const characters = '0123456789';
+          const charactersLength = characters.length;
+          for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+          }
+          return result;
+        }
+
+        const verificationCode = makeId(6);
+        const sendMailPromise = sendMail(email, 'memberForgetPassword', verificationCode, isJapanese);
+
+        sendMailPromise
+          .then(() => {
+            res.json({
+              verificationCode: !isMobile
+                ? crypto.AES.encrypt(verificationCode, process.env.checkpoint_security_key).toString()
+                : verificationCode,
+            });
+          })
+          .catch(() => {
+            res.json({
+              message: 'error during authentication',
+            });
+          });
+      } else {
+        res.json({
+          message: 'error during authentication',
+        });
+      }
+    })
+    .catch(() => {
       res.json({
         message: 'error during authentication',
       });
-    }
-  });
-};
-
-exports.memberForgetPasswordMobile = (req, res) => {
-  const { email } = req.body;
-  const isJapanese = req.body.isJapanese;
-
-  const selectMemberAuthenticationPromise = new Promise((resolve, reject) => {
-    postgresql.query(`SELECT * FROM member_authentication WHERE email = '${email}' and login_method = 'email';`, (err, result) => {
-      resolve(
-        result
-          ? result.rows.map((memberAuthentication) => {
-              return {
-                id: memberAuthentication.id,
-                email: memberAuthentication.email,
-                password: memberAuthentication.password,
-                loginMethod: memberAuthentication.login_method,
-              };
-            })
-          : err
-      );
     });
-  });
-
-  selectMemberAuthenticationPromise.then((data) => {
-    if (data.length === 0) {
-      res.json({
-        message: 'account not exist',
-      });
-    } else if (data.length === 1) {
-      function makeId(length) {
-        let result = '';
-        const characters = '0123456789';
-        const charactersLength = characters.length;
-        for (let i = 0; i < length; i++) {
-          result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
-        return result;
-      }
-
-      const verificationCode = makeId(6);
-      const sendMailPromise = sendMail(email, 'memberForgetPassword', verificationCode, isJapanese);
-
-      sendMailPromise
-        .then(() => {
-          res.json({
-            verificationCode,
-          });
-        })
-        .catch(() => {
-          res.json({
-            message: 'error during authentication',
-          });
-        });
-    } else {
-      res.json({
-        message: 'error during authentication',
-      });
-    }
-  });
 };
 
 exports.memberResetPassword = (req, res) => {
@@ -516,30 +417,35 @@ exports.memberResetPassword = (req, res) => {
 };
 
 exports.memberSetting = (req, res) => {
-  const backgroundId = req.body.backgroundId;
-  const musicId = req.body.musicId;
-  const musicCategory = req.body.musicCategory;
-  const memberId = req.body.memberId;
-  const favouriteMusicIdArr = req.body.favouriteMusicIdArr;
-  const playFromPlaylist = req.body.playFromPlaylist;
-  const deviceId = req.body.deviceId;
-  const onlineDuration = req.body.onlineDuration;
+  const { backgroundId, musicId, musicCategory, memberId, favouriteMusicIdArr, playFromPlaylist, deviceId, onlineDuration } = req.body;
+
+  function returnIsPremium(memberId) {
+    postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
+      if (result) {
+        const premiumExpirationDate = result.rows[0].premium_expiration_date;
+        const currentTime = new Date().getTime();
+        const premiumExpirationTime = new Date(premiumExpirationDate).getTime();
+
+        res.json({
+          isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
+          premiumExpirationDate,
+        });
+      } else {
+        res.json({ err });
+      }
+    });
+  }
 
   if (!memberId) {
     res.json({});
   } else {
     if (Math.floor(onlineDuration / 1000) === 0) {
       postgresql.query(`UPDATE member SET current_device_id = '${deviceId}' WHERE id = ${memberId};`, (err, result) => {
-        postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
-          const premiumExpirationDate = result.rows[0].premium_expiration_date;
-          const currentTime = new Date().getTime();
-          const premiumExpirationTime = new Date(premiumExpirationDate).getTime();
-
-          res.json({
-            isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
-            premiumExpirationDate,
-          });
-        });
+        if (err) {
+          res.json({ err });
+        } else {
+          returnIsPremium(memberId);
+        }
       });
     } else {
       postgresql.query(`SELECT current_device_id FROM member WHERE id = ${memberId};`, (err, result) => {
@@ -548,16 +454,11 @@ exports.memberSetting = (req, res) => {
             postgresql.query(
               `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}]::integer[], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
               (err, result) => {
-                postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
-                  const premiumExpirationDate = result.rows[0].premium_expiration_date;
-                  const currentTime = new Date().getTime();
-                  const premiumExpirationTime = new Date(premiumExpirationDate).getTime();
-
-                  res.json({
-                    isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
-                    premiumExpirationDate,
-                  });
-                });
+                if (err) {
+                  res.json({ err });
+                } else {
+                  returnIsPremium(memberId);
+                }
               }
             );
           } else {
@@ -566,7 +467,7 @@ exports.memberSetting = (req, res) => {
             });
           }
         } else {
-          res.json({});
+          res.json({ err });
         }
       });
     }
@@ -574,8 +475,7 @@ exports.memberSetting = (req, res) => {
 };
 
 exports.memberProfile = (req, res) => {
-  const memberId = req.body.memberId;
-  const avatarId = req.body.avatarId;
+  const { memberId, avatarId } = req.body;
 
   postgresql.query(`UPDATE member SET avatar_id = '${avatarId}' WHERE id = ${memberId};`, (err, result) => {
     res.json({});
@@ -724,13 +624,7 @@ exports.memberPayment = (req, res) => {
       (err, result) => {
         const sendMailPromise = sendMail(email, 'memberPayment', activationCode);
 
-        sendMailPromise
-          .then(() => {
-            res.json({});
-          })
-          .catch(() => {
-            res.json({});
-          });
+        sendMailPromise.finally(() => res.json({}));
       }
     );
   } else if (Number(amount) >= Number(process.env.SUBSCRIPTION_PRICE_ONE)) {
@@ -751,13 +645,7 @@ exports.memberPayment = (req, res) => {
       (err, result) => {
         const sendMailPromise = sendMail(email, 'memberPayment', activationCode);
 
-        sendMailPromise
-          .then(() => {
-            res.json({});
-          })
-          .catch(() => {
-            res.json({});
-          });
+        sendMailPromise.finally(() => res.json({}));
       }
     );
   } else {
@@ -767,6 +655,29 @@ exports.memberPayment = (req, res) => {
 
 exports.memberActivation = (req, res) => {
   const { memberId, activationCode } = req.body;
+
+  function activateMember(memberId, month) {
+    postgresql.query(`CALL activate_member(${memberId}, ${month});`, (err, result) => {
+      if (err) {
+        res.json({
+          message: 'error during authentication',
+        });
+      } else {
+        postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
+          if (err) {
+            res.json({
+              message: 'error during authentication',
+            });
+          } else {
+            res.json({
+              month,
+              premiumExpirationDate: result.rows[0].premium_expiration_date,
+            });
+          }
+        });
+      }
+    });
+  }
 
   if (activationCode.length > 10) {
     postgresql.query(`SELECT month, member_id_arr FROM coupon_special WHERE code = '${activationCode}';`, (err, result) => {
@@ -787,26 +698,7 @@ exports.memberActivation = (req, res) => {
                     message: 'error during authentication',
                   });
                 } else {
-                  postgresql.query(`CALL activate_member(${memberId}, ${month});`, (err, result) => {
-                    if (err) {
-                      res.json({
-                        message: 'error during authentication',
-                      });
-                    } else {
-                      postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
-                        if (err) {
-                          res.json({
-                            message: 'error during authentication',
-                          });
-                        } else {
-                          res.json({
-                            month,
-                            premiumExpirationDate: result.rows[0].premium_expiration_date,
-                          });
-                        }
-                      });
-                    }
-                  });
+                  activateMember(memberId, month);
                 }
               }
             );
@@ -838,26 +730,7 @@ exports.memberActivation = (req, res) => {
                   message: 'error during authentication',
                 });
               } else {
-                postgresql.query(`CALL activate_member(${memberId}, ${month});`, (err, result) => {
-                  if (err) {
-                    res.json({
-                      message: 'error during authentication',
-                    });
-                  } else {
-                    postgresql.query(`SELECT premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
-                      if (err) {
-                        res.json({
-                          message: 'error during authentication',
-                        });
-                      } else {
-                        res.json({
-                          month,
-                          premiumExpirationDate: result.rows[0].premium_expiration_date,
-                        });
-                      }
-                    });
-                  }
-                });
+                activateMember(memberId, month);
               }
             });
           }

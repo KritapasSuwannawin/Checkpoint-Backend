@@ -1,6 +1,6 @@
 const postgresql = require('../postgresql/postgresql');
 
-exports.adminFeedback = (req, res) => {
+exports.adminFeedback = async (req, res) => {
   const feedbackPromise = new Promise((resolve, reject) => {
     postgresql.query('SELECT * FROM feedback order by id;', (err, result) => {
       resolve({ title: 'main_feedback', data: result.rows });
@@ -31,15 +31,15 @@ exports.adminFeedback = (req, res) => {
     });
   });
 
-  Promise.all([
+  const feedbackArr = await Promise.all([
     feedbackPromise,
     feedbackFiveMinutePromise,
     feedbackTrialLastDayPromise,
     feedbackAfterTrialStandardPromise,
     feedbackAfterTrialPremiumPromise,
-  ]).then((values) => {
-    res.json(values);
-  });
+  ]);
+
+  res.json(feedbackArr);
 };
 
 exports.adminIssue = (req, res) => {
