@@ -449,18 +449,18 @@ INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese
 	('Port Town', 'ambient/audio/Port_Town.m4a', 'ambient/thumbnail/TAB_Port_Town.jpg', 0.15, '港町');
 
 INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_premium) VALUES
-	('0911', 'background/video/Bg0911_1080p.mp4', 'background/thumbnail/TBG0911.jpg', ARRAY[4, 10, 18], true),
-	('0912', 'background/video/Bg0912_1080p.mp4', 'background/thumbnail/TBG0912.jpg', ARRAY[1, 4, 10, 12, 18], true),
-	('0913', 'background/video/Bg0913_1080p.mp4', 'background/thumbnail/TBG0913.jpg', ARRAY[2, 3, 4, 10, 12, 18], true),
-	('0914', 'background/video/Bg0914_1080p.mp4', 'background/thumbnail/TBG0914.jpg', ARRAY[4, 9, 10, 18], true),
-	('0921', 'background/video/Bg0921_1080p.mp4', 'background/thumbnail/TBG0921.jpg', ARRAY[4, 10, 18], true),
-	('0922', 'background/video/Bg0922_1080p.mp4', 'background/thumbnail/TBG0922.jpg', ARRAY[1, 4, 10, 12, 18], true),
-	('0923', 'background/video/Bg0923_1080p.mp4', 'background/thumbnail/TBG0923.jpg', ARRAY[2, 3, 4, 10, 12, 18], true),
-	('0924', 'background/video/Bg0924_1080p.mp4', 'background/thumbnail/TBG0924.jpg', ARRAY[4, 9, 10, 18], true),
-	('0931', 'background/video/Bg0931_1080p.mp4', 'background/thumbnail/TBG0931.jpg', ARRAY[4, 8, 10, 18], true),
-	('0932', 'background/video/Bg0932_1080p.mp4', 'background/thumbnail/TBG0932.jpg', ARRAY[1, 4, 8, 10, 12, 18], true),
-	('0933', 'background/video/Bg0933_1080p.mp4', 'background/thumbnail/TBG0933.jpg', ARRAY[2, 3, 4, 8, 10, 12, 18], true),
-	('0934', 'background/video/Bg0934_1080p.mp4', 'background/thumbnail/TBG0934.jpg', ARRAY[4, 8, 9, 10, 18], true);
+	('0911', 'background/video/Bg0911_1080p.mp4', 'background/thumbnail/TBG0911.jpg', ARRAY[4, 10, 18, 19], true),
+	('0912', 'background/video/Bg0912_1080p.mp4', 'background/thumbnail/TBG0912.jpg', ARRAY[1, 4, 10, 12, 18, 19], true),
+	('0913', 'background/video/Bg0913_1080p.mp4', 'background/thumbnail/TBG0913.jpg', ARRAY[2, 3, 4, 10, 12, 18, 19], true),
+	('0914', 'background/video/Bg0914_1080p.mp4', 'background/thumbnail/TBG0914.jpg', ARRAY[4, 9, 10, 18, 19], true),
+	('0921', 'background/video/Bg0921_1080p.mp4', 'background/thumbnail/TBG0921.jpg', ARRAY[4, 10, 18, 19], true),
+	('0922', 'background/video/Bg0922_1080p.mp4', 'background/thumbnail/TBG0922.jpg', ARRAY[1, 4, 10, 12, 18, 19], true),
+	('0923', 'background/video/Bg0923_1080p.mp4', 'background/thumbnail/TBG0923.jpg', ARRAY[2, 3, 4, 10, 12, 18, 19], true),
+	('0924', 'background/video/Bg0924_1080p.mp4', 'background/thumbnail/TBG0924.jpg', ARRAY[4, 9, 10, 18, 19], true),
+	('0931', 'background/video/Bg0931_1080p.mp4', 'background/thumbnail/TBG0931.jpg', ARRAY[4, 8, 10, 18, 19], true),
+	('0932', 'background/video/Bg0932_1080p.mp4', 'background/thumbnail/TBG0932.jpg', ARRAY[1, 4, 8, 10, 12, 18, 19], true),
+	('0933', 'background/video/Bg0933_1080p.mp4', 'background/thumbnail/TBG0933.jpg', ARRAY[2, 3, 4, 8, 10, 12, 18, 19], true),
+	('0934', 'background/video/Bg0934_1080p.mp4', 'background/thumbnail/TBG0934.jpg', ARRAY[4, 8, 9, 10, 18, 19], true);
 
 --- create coupon_special table ---
 
@@ -519,3 +519,22 @@ UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 26;
 UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 27;
 UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 28;
 UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 29;
+
+--- add BG10 ---
+INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
+	('Beach Waves', 'ambient/audio/Beach_wave.m4a', 'ambient/thumbnail/TAB_Beach_Wave.jpg', 0.15, 'ビーチの波'),
+	('Sketching', 'ambient/audio/Sketching.m4a', 'ambient/thumbnail/TAB_Sketching.jpg', 0.20, 'スケッチ');
+
+INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_premium) VALUES
+	('1011', 'background/video/Bg1011_1080p.mp4', 'background/thumbnail/TBG1011.jpg', ARRAY[4, 10, 18, 19, 20], true),
+	('1012', 'background/video/Bg1012_1080p.mp4', 'background/thumbnail/TBG1012.jpg', ARRAY[1, 4, 10, 12, 18, 19, 20], true),
+	('1013', 'background/video/Bg1013_1080p.mp4', 'background/thumbnail/TBG1013.jpg', ARRAY[2, 3, 4, 10, 12, 18, 19, 20], true),
+	('1014', 'background/video/Bg1014_1080p.mp4', 'background/thumbnail/TBG1014.jpg', ARRAY[4, 9, 10, 18, 19, 20], true),
+	('1021', 'background/video/Bg1021_1080p.mp4', 'background/thumbnail/TBG1021.jpg', ARRAY[4, 10, 18, 19, 20], true),
+	('1022', 'background/video/Bg1022_1080p.mp4', 'background/thumbnail/TBG1022.jpg', ARRAY[1, 4, 10, 12, 18, 19, 20], true),
+	('1023', 'background/video/Bg1023_1080p.mp4', 'background/thumbnail/TBG1023.jpg', ARRAY[2, 3, 4, 10, 12, 18, 19, 20], true),
+	('1024', 'background/video/Bg1024_1080p.mp4', 'background/thumbnail/TBG1024.jpg', ARRAY[4, 9, 10, 18, 19, 20], true),
+	('1031', 'background/video/Bg1031_1080p.mp4', 'background/thumbnail/TBG1031.jpg', ARRAY[4, 8, 10, 18, 19, 20], true),
+	('1032', 'background/video/Bg1032_1080p.mp4', 'background/thumbnail/TBG1032.jpg', ARRAY[1, 4, 8, 10, 12, 18, 19, 20], true),
+	('1033', 'background/video/Bg1033_1080p.mp4', 'background/thumbnail/TBG1033.jpg', ARRAY[2, 3, 4, 8, 10, 12, 18, 19, 20], true),
+	('1034', 'background/video/Bg1034_1080p.mp4', 'background/thumbnail/TBG1034.jpg', ARRAY[4, 8, 9, 10, 18, 19, 20], true);

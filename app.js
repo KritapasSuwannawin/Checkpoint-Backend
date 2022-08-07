@@ -1,22 +1,17 @@
 const express = require('express');
-const morgan = require('morgan');
 const cors = require('cors');
 
-const resourceRouter = require('./route/resourceRoute');
-const memberRouter = require('./route/memberRoute');
-const adminRouter = require('./route/adminRoute');
+const resourceRouterV1 = require('./route/resourceRouteV1');
+const memberRouterV1 = require('./route/memberRouteV1');
+const adminRouterV1 = require('./route/adminRouteV1');
 
 const app = express();
-
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
 
 app.use(express.json());
 app.use(cors());
 
-app.use('/api/resource', resourceRouter);
-app.use('/api/member', memberRouter);
-app.use('/api/admin', adminRouter);
+app.use('/v1/resource', resourceRouterV1);
+app.use('/v1/member', memberRouterV1);
+app.use('/v1/admin', adminRouterV1);
 
 module.exports = app;
