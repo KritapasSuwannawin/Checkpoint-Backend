@@ -513,7 +513,7 @@ exports.updateSettingV1 = (req, res) => {
   if (
     !backgroundId ||
     !musicId ||
-    !musicCategory ||
+    musicCategory === undefined ||
     !memberId ||
     !favouriteMusicIdArr ||
     isPlayFromPlaylist === undefined ||
@@ -571,7 +571,7 @@ exports.updateSettingV1 = (req, res) => {
 
       if (result.rows[0].current_device_id === deviceId) {
         postgresql.query(
-          `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}]::integer[], play_from_playlist = ${playFromPlaylist} WHERE id = ${memberId};`,
+          `UPDATE member_setting SET background_id = '${backgroundId}', music_id = ${musicId}, music_category_id = (SELECT id FROM music_category WHERE name = '${musicCategory}'), favourite_music_id_arr = ARRAY[${favouriteMusicIdArr}]::integer[], play_from_playlist = ${isPlayFromPlaylist} WHERE id = ${memberId};`,
           (err, _) => {
             if (err) {
               res.json({
