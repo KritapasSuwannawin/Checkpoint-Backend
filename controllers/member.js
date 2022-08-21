@@ -1,7 +1,6 @@
 const postgresql = require('../postgresql/postgresql');
 const aws = require('aws-sdk');
 const crypto = require('crypto-js');
-const { json } = require('express');
 
 const SESConfig = {
   apiVersion: '2010-12-01',
