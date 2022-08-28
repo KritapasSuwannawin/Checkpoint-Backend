@@ -242,9 +242,9 @@ exports.signUpMemberV1 = (req, res) => {
                         email,
                         username: member.username,
                         avatarId: member.avatar_id,
-                        isPremium: true,
                         registrationDate: member.registration_date,
                         premiumExpirationDate: member.premium_expiration_date,
+                        trialStartDate: member.trial_start_date,
                       };
                     })
                   );
@@ -354,9 +354,6 @@ exports.signInMemberV1 = (req, res) => {
                   return;
                 }
 
-                const currentTime = new Date().getTime();
-                const premiumExpirationTime = new Date(result.rows[0].premium_expiration_date).getTime();
-
                 resolve(
                   result.rows.map((member) => {
                     return {
@@ -364,9 +361,9 @@ exports.signInMemberV1 = (req, res) => {
                       email,
                       username: member.username,
                       avatarId: member.avatar_id,
-                      isPremium: premiumExpirationTime - currentTime >= 0 ? true : false,
                       registrationDate: member.registration_date,
                       premiumExpirationDate: member.premium_expiration_date,
+                      trialStartDate: member.trial_start_date,
                       backgroundId: member.background_id,
                       musicId: member.music_id,
                       musicCategoryId: member.music_category_id,
@@ -1066,4 +1063,44 @@ exports.activateAccountV1 = (req, res) => {
       }
     });
   }
+};
+
+exports.startFreeTrialV1 = (req, res) => {
+  const { memberId } = req.body;
+
+  if (!memberId) {
+    res.json({
+      statusCode: 4001,
+    });
+    return;
+  }
+
+  postgresql.query(
+    `UPDATE member SET trial_start_date = current_date, premium_expiration_date = current_date + interval '7 day' WHERE id = ${memberId};`,
+    (err, _) => {
+      if (err) {
+        res.json({
+          statusCode: 4000,
+        });
+        return;
+      }
+
+      postgresql.query(`SELECT trial_start_date, premium_expiration_date FROM member WHERE id = ${memberId};`, (err, result) => {
+        if (err) {
+          res.json({
+            statusCode: 4000,
+          });
+          return;
+        }
+
+        res.json({
+          statusCode: 2001,
+          data: {
+            trialStartDate: result.rows[0].trial_start_date,
+            premiumExpirationDate: result.rows[0].premium_expiration_date,
+          },
+        });
+      });
+    }
+  );
 };

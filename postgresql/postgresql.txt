@@ -26,9 +26,9 @@ LANGUAGE 'plpgsql'
 AS $BODY$
 begin
 	INSERT INTO member_authentication (email, password, login_method) values (in_email, MD5(in_password), in_login_method);
-	INSERT INTO member (username, avatar_id, receive_news, registration_date, premium_expiration_date) values (in_username, 1, in_receive_news, current_date, current_date + interval '3 day');
+	INSERT INTO member (username, avatar_id, receive_news, registration_date, premium_expiration_date) values (in_username, 1, in_receive_news, current_date, current_date);
 	INSERT INTO member_setting (background_id, music_id, music_category_id, favourite_music_id_arr, play_from_playlist) 
-		values ('0411', 13, NULL, ARRAY[]::integer[], FALSE);
+		values ('0411', 4, NULL, ARRAY[]::integer[], FALSE);
 end;
 $BODY$;
 
@@ -422,26 +422,6 @@ INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_p
 	('0833', 'background/video/Bg0833_1080p.mp4', 'background/thumbnail/TBG0833.jpg', ARRAY[2, 3, 4, 5, 8, 11, 16], true),
 	('0834', 'background/video/Bg0834_1080p.mp4', 'background/thumbnail/TBG0834.jpg', ARRAY[4, 5, 8, 9, 11, 16], true);
 
---- change free trial to 7 days ---
-
-DROP PROCEDURE IF EXISTS public.add_new_member(character varying, character varying, character varying, character varying, boolean);
-
-CREATE OR REPLACE PROCEDURE public.add_new_member(
-	in_email character varying,
-	in_password character varying,
-	in_login_method character varying,
-	in_username character varying,
-	in_receive_news boolean)
-LANGUAGE 'plpgsql'
-AS $BODY$
-begin
-	INSERT INTO member_authentication (email, password, login_method) values (in_email, MD5(in_password), in_login_method);
-	INSERT INTO member (username, avatar_id, receive_news, registration_date, premium_expiration_date) values (in_username, 1, in_receive_news, current_date, current_date + interval '7 day');
-	INSERT INTO member_setting (background_id, music_id, music_category_id, favourite_music_id_arr, play_from_playlist) 
-		values ('0411', 13, NULL, ARRAY[]::integer[], FALSE);
-end;
-$BODY$;
-
 --- add BG09 ---
 
 INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
@@ -521,6 +501,7 @@ UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 28;
 UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 29;
 
 --- add BG10 ---
+
 INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
 	('Beach Waves', 'ambient/audio/Beach_wave.m4a', 'ambient/thumbnail/TAB_Beach_Wave.jpg', 0.15, 'ビーチの波'),
 	('Sketching', 'ambient/audio/Sketching.m4a', 'ambient/thumbnail/TAB_Sketching.jpg', 0.20, 'スケッチ');
@@ -538,3 +519,7 @@ INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_p
 	('1032', 'background/video/Bg1032_1080p.mp4', 'background/thumbnail/TBG1032.jpg', ARRAY[1, 4, 8, 10, 12, 18, 19, 20], true),
 	('1033', 'background/video/Bg1033_1080p.mp4', 'background/thumbnail/TBG1033.jpg', ARRAY[2, 3, 4, 8, 10, 12, 18, 19, 20], true),
 	('1034', 'background/video/Bg1034_1080p.mp4', 'background/thumbnail/TBG1034.jpg', ARRAY[4, 8, 9, 10, 18, 19, 20], true);
+
+--- trial ---
+
+ALTER TABLE member ADD COLUMN trial_start_date date;
