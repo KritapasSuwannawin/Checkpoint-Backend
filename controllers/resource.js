@@ -13,7 +13,6 @@ exports.getResourceV1 = (req, res) => {
           return {
             id: ambient.id,
             name: ambient.name,
-            nameJapanese: ambient.name_japanese,
             filePath: ambient.file_path,
             thumbnailFilePath: ambient.thumbnail_file_path,
             volume: Number(ambient.volume),

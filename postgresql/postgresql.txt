@@ -57,7 +57,6 @@ CREATE TABLE IF NOT EXISTS public.ambient
     file_path character varying(255),
     thumbnail_file_path character varying(255),
     volume numeric(3,2),
-    name_japanese character varying(255),
     CONSTRAINT ambient_pkey PRIMARY KEY (id)
 );
 
@@ -243,22 +242,22 @@ CREATE TABLE IF NOT EXISTS public.music_category
     CONSTRAINT music_category_pkey PRIMARY KEY (id)
 );
 
-INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
-	('Light Rain', 'ambient/audio/Light_Rain.m4a', 'ambient/thumbnail/TAB_Light_Rain.jpg', 0.15, '小雨'),
-	('Heavy Rain', 'ambient/audio/Heavy_Rain.m4a', 'ambient/thumbnail/TAB_Heavy_Rain.jpg', 0.2, '激しい雨'),
-	('Thunder Storm', 'ambient/audio/Thunder_Strom.m4a', 'ambient/thumbnail/TAB_Thunder_Strom.jpg', 0.5, '雷'),
-	('Wind Tree', 'ambient/audio/Wind_Tree.m4a', 'ambient/thumbnail/TAB_Wind_Tree.jpg', 0.1, '木のさざめき'),
-	('River', 'ambient/audio/River.m4a', 'ambient/thumbnail/TAB_River.jpg', 0.15, '川'),
-	('Bird Park', 'ambient/audio/Bird_Park.m4a', 'ambient/thumbnail/TAB_Bird_Park.jpg', 0.15, '公園の鳥'),
-	('Bird Forest', 'ambient/audio/Bird_Forest.m4a', 'ambient/thumbnail/TAB_Bird_Forest.jpg', 0.15, '森の鳥'),
-	('Night Forest', 'ambient/audio/Night_Forest.m4a',  'ambient/thumbnail/TAB_Night_Forest.jpg', 0.15, '夜の森'),
-	('Light Wind', 'ambient/audio/Light_Wind.m4a', 'ambient/thumbnail/TAB_Cold_Wind.jpg', 0.25, '風のさざめき'),
-	('Wind Chimes', 'ambient/audio/Wind_Chimes.m4a', 'ambient/thumbnail/TAB_Wind_Chimes.jpg', 0.15, '風鈴'),
-	('Air Conditioner', 'ambient/audio/Air_Conditioner.m4a', 'ambient/thumbnail/TAB_Air_Conditioner.jpg', 0.25, 'エアコン'),
-	('Rain on Window', 'ambient/audio/Rain_On_Window.m4a', 'ambient/thumbnail/TAB_Rain_On_Window.jpg', 0.25, '窓に雨が降る'),
-	('Cafe', 'ambient/audio/Cafe.m4a', 'ambient/thumbnail/TAB_Cafe.jpg', 0.15, 'カフェ'),
-	('Rooftop', 'ambient/audio/City_Rooftop.m4a', 'ambient/thumbnail/TAB_City_Rooftop.jpg', 0.2, '屋上'),
-	('Fireplace', 'ambient/audio/Fireplace.m4a', 'ambient/thumbnail/TAB_Fireplace.jpg', 0.2, '暖炉');
+INSERT INTO ambient (name, file_path, thumbnail_file_path, volume) VALUES 
+	('Light Rain', 'ambient/audio/Light_Rain.m4a', 'ambient/thumbnail/TAB_Light_Rain.jpg', 0.15),
+	('Heavy Rain', 'ambient/audio/Heavy_Rain.m4a', 'ambient/thumbnail/TAB_Heavy_Rain.jpg', 0.2),
+	('Thunder Storm', 'ambient/audio/Thunder_Strom.m4a', 'ambient/thumbnail/TAB_Thunder_Strom.jpg', 0.5),
+	('Wind Tree', 'ambient/audio/Wind_Tree.m4a', 'ambient/thumbnail/TAB_Wind_Tree.jpg', 0.1),
+	('River', 'ambient/audio/River.m4a', 'ambient/thumbnail/TAB_River.jpg', 0.15),
+	('Bird Park', 'ambient/audio/Bird_Park.m4a', 'ambient/thumbnail/TAB_Bird_Park.jpg', 0.15),
+	('Bird Forest', 'ambient/audio/Bird_Forest.m4a', 'ambient/thumbnail/TAB_Bird_Forest.jpg', 0.15),
+	('Night Forest', 'ambient/audio/Night_Forest.m4a',  'ambient/thumbnail/TAB_Night_Forest.jpg', 0.15),
+	('Light Wind', 'ambient/audio/Light_Wind.m4a', 'ambient/thumbnail/TAB_Cold_Wind.jpg', 0.25),
+	('Wind Chimes', 'ambient/audio/Wind_Chimes.m4a', 'ambient/thumbnail/TAB_Wind_Chimes.jpg', 0.15),
+	('Air Conditioner', 'ambient/audio/Air_Conditioner.m4a', 'ambient/thumbnail/TAB_Air_Conditioner.jpg', 0.25),
+	('Rain on Window', 'ambient/audio/Rain_On_Window.m4a', 'ambient/thumbnail/TAB_Rain_On_Window.jpg', 0.25),
+	('Cafe', 'ambient/audio/Cafe.m4a', 'ambient/thumbnail/TAB_Cafe.jpg', 0.15
+	('Rooftop', 'ambient/audio/City_Rooftop.m4a', 'ambient/thumbnail/TAB_City_Rooftop.jpg', 0.2),
+	('Fireplace', 'ambient/audio/Fireplace.m4a', 'ambient/thumbnail/TAB_Fireplace.jpg', 0.2);
 
 INSERT INTO avatar (file_path) VALUES 
   ('avatar/P01.jpg'),
@@ -405,8 +404,8 @@ INSERT INTO music_category (name) VALUES
 
 --- add BG08 ---
 
-INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
-	('Magic Keyboard', 'ambient/audio/Magic_Keyboard.m4a', 'ambient/thumbnail/TAB_Magic_Keyboard.jpg', 0.25, 'Magicキーボード');
+INSERT INTO ambient (name, file_path, thumbnail_file_path, volume) VALUES 
+	('Magic Keyboard', 'ambient/audio/Magic_Keyboard.m4a', 'ambient/thumbnail/TAB_Magic_Keyboard.jpg', 0.25);
 
 INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_premium) VALUES
 	('0811', 'background/video/Bg0811_1080p.mp4', 'background/thumbnail/TBG0811.jpg', ARRAY[4, 5, 7, 11, 16], true),
@@ -424,9 +423,9 @@ INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_p
 
 --- add BG09 ---
 
-INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
-	('Mechanical Keyboard', 'ambient/audio/Mechanical_Keyboard.m4a', 'ambient/thumbnail/TAB_Mechanical Keyboard.jpg', 0.25, 'Mechanicalキーボード'),
-	('Port Town', 'ambient/audio/Port_Town.m4a', 'ambient/thumbnail/TAB_Port_Town.jpg', 0.15, '港町');
+INSERT INTO ambient (name, file_path, thumbnail_file_path, volume) VALUES 
+	('Mechanical Keyboard', 'ambient/audio/Mechanical_Keyboard.m4a', 'ambient/thumbnail/TAB_Mechanical Keyboard.jpg', 0.25),
+	('Port Town', 'ambient/audio/Port_Town.m4a', 'ambient/thumbnail/TAB_Port_Town.jpg', 0.15);
 
 INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_premium) VALUES
 	('0911', 'background/video/Bg0911_1080p.mp4', 'background/thumbnail/TBG0911.jpg', ARRAY[4, 10, 18, 19], true),
@@ -502,9 +501,9 @@ UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 29;
 
 --- add BG10 ---
 
-INSERT INTO ambient (name, file_path, thumbnail_file_path, volume, name_japanese) VALUES 
-	('Beach Waves', 'ambient/audio/Beach_wave.m4a', 'ambient/thumbnail/TAB_Beach_Wave.jpg', 0.15, 'ビーチの波'),
-	('Sketching', 'ambient/audio/Sketching.m4a', 'ambient/thumbnail/TAB_Sketching.jpg', 0.20, 'スケッチ');
+INSERT INTO ambient (name, file_path, thumbnail_file_path, volume) VALUES 
+	('Beach Waves', 'ambient/audio/Beach_wave.m4a', 'ambient/thumbnail/TAB_Beach_Wave.jpg', 0.15),
+	('Sketching', 'ambient/audio/Sketching.m4a', 'ambient/thumbnail/TAB_Sketching.jpg', 0.20);
 
 INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_premium) VALUES
 	('1011', 'background/video/Bg1011_1080p.mp4', 'background/thumbnail/TBG1011.jpg', ARRAY[4, 10, 18, 19, 20], true),

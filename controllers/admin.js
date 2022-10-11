@@ -82,9 +82,17 @@ exports.adminIssue = (_, res) => {
   });
 };
 
-exports.adminMember = (_, res) => {
+exports.adminMember = (req, res) => {
+  const { receive_news } = req.query;
+
+  let where = '';
+
+  if (receive_news) {
+    where += `WHERE m.receive_news = ${receive_news}`;
+  }
+
   postgresql.query(
-    'SELECT m.id, m.registration_date, ma.email, ma.login_method FROM member m INNER JOIN member_authentication ma ON m.id = ma.id ORDER BY m.id',
+    `SELECT m.id, m.registration_date, ma.email, ma.login_method FROM member m INNER JOIN member_authentication ma ON m.id = ma.id ${where} ORDER BY m.id`,
     (err, result) => {
       if (err) {
         res.send('Server error');
