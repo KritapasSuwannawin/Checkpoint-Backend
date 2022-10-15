@@ -1,8 +1,8 @@
-const postgresql = require('../postgresql/postgresql');
+const postgres = require('../postgres/postgres');
 
 exports.getResourceV1 = (req, res) => {
   const ambientPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM ambient ORDER BY id;', (err, result) => {
+    postgres.query('SELECT * FROM ambient ORDER BY id;', (err, result) => {
       if (err) {
         reject(err);
         return;
@@ -23,7 +23,7 @@ exports.getResourceV1 = (req, res) => {
   });
 
   const backgroundPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM background ORDER BY id;', (err, result) => {
+    postgres.query('SELECT * FROM background ORDER BY id;', (err, result) => {
       if (err) {
         reject(err);
         return;
@@ -44,7 +44,7 @@ exports.getResourceV1 = (req, res) => {
   });
 
   const musicPromise = new Promise((resolve, reject) => {
-    postgresql.query(
+    postgres.query(
       'SELECT m.*, mc.name AS category_name FROM music m INNER JOIN music_category mc ON m.category_id = mc.id ORDER BY m.id;',
       (err, result) => {
         if (err) {
@@ -71,7 +71,7 @@ exports.getResourceV1 = (req, res) => {
   });
 
   const avatarPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM avatar ORDER BY id;', (err, result) => {
+    postgres.query('SELECT * FROM avatar ORDER BY id;', (err, result) => {
       if (err) {
         reject(err);
         return;
@@ -89,7 +89,7 @@ exports.getResourceV1 = (req, res) => {
   });
 
   const moodPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM music_mood ORDER BY id;', (err, result) => {
+    postgres.query('SELECT * FROM music_mood ORDER BY id;', (err, result) => {
       if (err) {
         reject(err);
         return;

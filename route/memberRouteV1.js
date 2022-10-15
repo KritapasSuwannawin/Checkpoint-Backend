@@ -22,9 +22,4 @@ router.route('/feedback').post(memberController.recordFeedbackV1);
 
 router.route('/issue').post(memberController.recordIssueV1);
 
-router.route('/payment').post(memberController.handlePaymentBuyMeCoffeeV1);
-
-router.route('/account/activate').post(memberController.activateAccountV1);
-router.route('/account/trial/start').post(memberController.startFreeTrialV1);
-
 module.exports = router;

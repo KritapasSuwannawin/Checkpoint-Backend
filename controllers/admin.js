@@ -1,8 +1,8 @@
-const postgresql = require('../postgresql/postgresql');
+const postgres = require('../postgres/postgres');
 
 exports.adminFeedback = (_, res) => {
   const feedbackPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM feedback order by id;', (err, result) => {
+    postgres.query('SELECT * FROM feedback order by id;', (err, result) => {
       if (err) {
         reject(err);
         return;
@@ -13,7 +13,7 @@ exports.adminFeedback = (_, res) => {
   });
 
   const feedbackAfterTrialPremiumPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM feedback_after_trial_premium order by id;', (err, result) => {
+    postgres.query('SELECT * FROM feedback_after_trial_premium order by id;', (err, result) => {
       if (err) {
         reject(err);
         return;
@@ -24,7 +24,7 @@ exports.adminFeedback = (_, res) => {
   });
 
   const feedbackAfterTrialStandardPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM feedback_after_trial_standard order by id;', (err, result) => {
+    postgres.query('SELECT * FROM feedback_after_trial_standard order by id;', (err, result) => {
       if (err) {
         reject(err);
         return;
@@ -35,7 +35,7 @@ exports.adminFeedback = (_, res) => {
   });
 
   const feedbackFiveMinutePromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM feedback_five_minute order by id;', (err, result) => {
+    postgres.query('SELECT * FROM feedback_five_minute order by id;', (err, result) => {
       if (err) {
         reject(err);
         return;
@@ -46,7 +46,7 @@ exports.adminFeedback = (_, res) => {
   });
 
   const feedbackTrialLastDayPromise = new Promise((resolve, reject) => {
-    postgresql.query('SELECT * FROM feedback_trial_last_day order by id;', (err, result) => {
+    postgres.query('SELECT * FROM feedback_trial_last_day order by id;', (err, result) => {
       if (err) {
         reject(err);
         return;
@@ -72,7 +72,7 @@ exports.adminFeedback = (_, res) => {
 };
 
 exports.adminIssue = (_, res) => {
-  postgresql.query('SELECT * FROM member_issue order by id;', (err, result) => {
+  postgres.query('SELECT * FROM member_issue order by id;', (err, result) => {
     if (err) {
       res.send('Server error');
       return;
@@ -91,7 +91,7 @@ exports.adminMember = (req, res) => {
     where += `WHERE m.receive_news = ${receive_news}`;
   }
 
-  postgresql.query(
+  postgres.query(
     `SELECT m.id, m.registration_date, ma.email, ma.login_method FROM member m INNER JOIN member_authentication ma ON m.id = ma.id ${where} ORDER BY m.id`,
     (err, result) => {
       if (err) {
