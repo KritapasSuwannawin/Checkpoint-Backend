@@ -33,10 +33,15 @@ exports.getResourceV1 = (req, res) => {
         result.rows.map((background) => {
           return {
             id: background.id,
+            name: background.name,
+            artistName: background.artist_name,
             filePath: background.file_path,
             thumbnailFilePath: background.thumbnail_file_path,
+            storyUrl: background.story_url,
             ambientIdArr: background.ambient_id_arr,
-            isPremium: background.is_premium,
+            isMember: background.is_member,
+            categoryId: background.category_id,
+            isTopHit: background.is_top_hit,
           };
         })
       );
