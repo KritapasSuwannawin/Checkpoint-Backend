@@ -43,6 +43,24 @@ exports.getResourceV1 = (req, res) => {
     });
   });
 
+  const backgroundCategoryPromise = new Promise((resolve, reject) => {
+    postgres.query('SELECT * FROM background_category ORDER BY id;', (err, result) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve(
+        result.rows.map((category) => {
+          return {
+            id: category.id,
+            name: category.name,
+          };
+        })
+      );
+    });
+  });
+
   const musicPromise = new Promise((resolve, reject) => {
     postgres.query(
       'SELECT m.*, mc.name AS category_name FROM music m INNER JOIN music_category mc ON m.category_id = mc.id ORDER BY m.id;',
@@ -107,16 +125,17 @@ exports.getResourceV1 = (req, res) => {
     });
   });
 
-  Promise.all([ambientPromise, backgroundPromise, musicPromise, avatarPromise, moodPromise])
+  Promise.all([ambientPromise, backgroundPromise, backgroundCategoryPromise, musicPromise, avatarPromise, moodPromise])
     .then((dataArr) => {
       res.json({
         statusCode: 2001,
         data: {
           ambient: dataArr[0],
           background: dataArr[1],
-          music: dataArr[2],
-          avatar: dataArr[3],
-          mood: dataArr[4],
+          backgroundCategory: dataArr[2],
+          music: dataArr[3],
+          avatar: dataArr[4],
+          mood: dataArr[5],
         },
       });
     })

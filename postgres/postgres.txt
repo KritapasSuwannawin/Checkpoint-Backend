@@ -256,7 +256,7 @@ INSERT INTO ambient (name, file_path, thumbnail_file_path, volume) VALUES
 	('Air Conditioner', 'ambient/audio/Air_Conditioner.m4a', 'ambient/thumbnail/TAB_Air_Conditioner.jpg', 0.25),
 	('Rain on Window', 'ambient/audio/Rain_On_Window.m4a', 'ambient/thumbnail/TAB_Rain_On_Window.jpg', 0.25),
 	('Cafe', 'ambient/audio/Cafe.m4a', 'ambient/thumbnail/TAB_Cafe.jpg', 0.15
-	('Rooftop', 'ambient/audio/City_Rooftop.m4a', 'ambient/thumbnail/TAB_City_Rooftop.jpg', 0.2),
+	('City Rooftop', 'ambient/audio/City_Rooftop.m4a', 'ambient/thumbnail/TAB_City_Rooftop.jpg', 0.2),
 	('Fireplace', 'ambient/audio/Fireplace.m4a', 'ambient/thumbnail/TAB_Fireplace.jpg', 0.2);
 
 INSERT INTO avatar (file_path) VALUES 
@@ -502,7 +502,7 @@ UPDATE music SET mood_id_arr = ARRAY[1, 2] WHERE id = 29;
 --- add BG10 ---
 
 INSERT INTO ambient (name, file_path, thumbnail_file_path, volume) VALUES 
-	('Beach Waves', 'ambient/audio/Beach_wave.m4a', 'ambient/thumbnail/TAB_Beach_Wave.jpg', 0.15),
+	('Beach Wave', 'ambient/audio/Beach_wave.m4a', 'ambient/thumbnail/TAB_Beach_Wave.jpg', 0.15),
 	('Sketching', 'ambient/audio/Sketching.m4a', 'ambient/thumbnail/TAB_Sketching.jpg', 0.20);
 
 INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_premium) VALUES
@@ -522,3 +522,16 @@ INSERT INTO background (id, file_path, thumbnail_file_path, ambient_id_arr, is_p
 --- trial ---
 
 ALTER TABLE member ADD COLUMN trial_start_date date;
+
+--- version 2.0.0 ---
+
+CREATE TABLE IF NOT EXISTS public.background_category
+(
+    id SERIAL,
+    name character varying(255)
+);
+
+INSERT INTO background_category (name) VALUES
+	('Anime'),
+	('Pixel'),
+	('Game');
