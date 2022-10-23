@@ -726,3 +726,11 @@ INSERT INTO background (id, name,  artist_name, file_path, thumbnail_file_path, 
   ('Game_BG0132', 'Castle Campfire', 'Checkpoint Originals', 'BG/Game_BG/Game_BG01_1080p/Game_BG0132.mp4', 'BG/Game_BG/Game_BG01_1080p/Game_TBG01/Game_TBG0132.jpg', null, ARRAY[1,4,7,15], TRUE, 3, true),
   ('Game_BG0133', 'Castle Campfire', 'Checkpoint Originals', 'BG/Game_BG/Game_BG01_1080p/Game_BG0133.mp4', 'BG/Game_BG/Game_BG01_1080p/Game_TBG01/Game_TBG0133.jpg', null, ARRAY[2,3,4,7,15], TRUE, 3, true),
   ('Game_BG0134', 'Castle Campfire', 'Checkpoint Originals', 'BG/Game_BG/Game_BG01_1080p/Game_BG0134.mp4', 'BG/Game_BG/Game_BG01_1080p/Game_TBG01/Game_TBG0134.jpg', null, ARRAY[4,7,9,15], TRUE, 3, true);
+
+ALTER TABLE ambient DROP COLUMN thumbnail_file_path;
+
+ALTER TABLE ambient ADD COLUMN white_icon_file_path character varying(255);
+ALTER TABLE ambient ADD COLUMN black_icon_file_path character varying(255);
+
+UPDATE ambient set white_icon_file_path = 'ambient/icon/Ambience Icon_White/' || name || '_White.svg';
+UPDATE ambient set black_icon_file_path = 'ambient/icon/Ambience Icon_Black/' || name || '_Black.svg';

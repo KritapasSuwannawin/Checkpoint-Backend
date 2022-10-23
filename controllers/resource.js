@@ -14,7 +14,8 @@ exports.getResourceV1 = (req, res) => {
             id: ambient.id,
             name: ambient.name,
             filePath: ambient.file_path,
-            thumbnailFilePath: ambient.thumbnail_file_path,
+            whiteIconFilePath: ambient.white_icon_file_path,
+            blackIconFilePath: ambient.black_icon_file_path,
             volume: Number(ambient.volume),
           };
         })
