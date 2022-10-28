@@ -734,3 +734,14 @@ ALTER TABLE ambient ADD COLUMN black_icon_file_path character varying(255);
 
 UPDATE ambient set white_icon_file_path = 'ambient/icon/Ambience Icon_White/' || name || '_White.svg';
 UPDATE ambient set black_icon_file_path = 'ambient/icon/Ambience Icon_Black/' || name || '_Black.svg';
+
+ALTER TABLE music DROP COLUMN mood_id_arr;
+
+ALTER TABLE music ADD COLUMN is_mood boolean;
+
+UPDATE music SET is_mood = false;
+
+INSERT INTO music (music_name, artist_name, artist_link, file_path, thumbnail_file_path, is_mood) VALUES
+  ('Day Dream', 'pa_punnn', 'https://linktr.ee/pa_punnn', 'music/audio/mood/All Day Music_Day Dream.m4a', 'music/thumbnail/mood/All Day Music_Day Dream.jpg', TRUE),
+  ('Late Night', 'pa_punnn', 'https://linktr.ee/pa_punnn', 'music/audio/mood/All Day Music_Late Night.m4a', 'music/thumbnail/mood/All Day Music_Late Night.jpg', TRUE),
+  ('New Day', 'pa_punnn', 'https://linktr.ee/pa_punnn', 'music/audio/mood/All Day Music_New Day.m4a', 'music/thumbnail/mood/All Day Music_New Day.jpg', TRUE);

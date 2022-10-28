@@ -517,7 +517,7 @@ exports.updateSettingV1 = (req, res) => {
             }
 
             res.json({
-              statusCode: 2001,
+              statusCode: 2000,
             });
           }
         );

@@ -24,29 +24,33 @@ exports.getResourceV1 = (req, res) => {
   });
 
   const backgroundPromise = new Promise((resolve, reject) => {
-    postgres.query('SELECT * FROM background ORDER BY id;', (err, result) => {
-      if (err) {
-        reject(err);
-        return;
-      }
+    postgres.query(
+      'SELECT b.*, bc.name AS category_name FROM background b INNER JOIN background_category bc ON b.category_id = bc.id ORDER BY b.id;',
+      (err, result) => {
+        if (err) {
+          reject(err);
+          return;
+        }
 
-      resolve(
-        result.rows.map((background) => {
-          return {
-            id: background.id,
-            name: background.name,
-            artistName: background.artist_name,
-            filePath: background.file_path,
-            thumbnailFilePath: background.thumbnail_file_path,
-            storyUrl: background.story_url,
-            ambientIdArr: background.ambient_id_arr,
-            isMember: background.is_member,
-            categoryId: background.category_id,
-            isTopHit: background.is_top_hit,
-          };
-        })
-      );
-    });
+        resolve(
+          result.rows.map((background) => {
+            return {
+              id: background.id,
+              name: background.name,
+              artistName: background.artist_name,
+              filePath: background.file_path,
+              thumbnailFilePath: background.thumbnail_file_path,
+              storyUrl: background.story_url,
+              ambientIdArr: background.ambient_id_arr,
+              isMember: background.is_member,
+              categoryId: background.category_id,
+              category: background.category_name,
+              isTopHit: background.is_top_hit,
+            };
+          })
+        );
+      }
+    );
   });
 
   const backgroundCategoryPromise = new Promise((resolve, reject) => {
@@ -69,7 +73,7 @@ exports.getResourceV1 = (req, res) => {
 
   const musicPromise = new Promise((resolve, reject) => {
     postgres.query(
-      'SELECT m.*, mc.name AS category_name FROM music m INNER JOIN music_category mc ON m.category_id = mc.id ORDER BY m.id;',
+      'SELECT m.*, mc.name AS category_name FROM music m LEFT JOIN music_category mc ON m.category_id = mc.id ORDER BY m.id;',
       (err, result) => {
         if (err) {
           reject(err);
@@ -85,13 +89,32 @@ exports.getResourceV1 = (req, res) => {
               artistLink: music.artist_link,
               filePath: music.file_path,
               thumbnailFilePath: music.thumbnail_file_path,
+              categoryId: music.category_id,
               category: music.category_name,
-              moodIdArr: music.mood_id_arr,
+              isMood: music.is_mood,
             };
           })
         );
       }
     );
+  });
+
+  const musicCategoryPromise = new Promise((resolve, reject) => {
+    postgres.query('SELECT * FROM music_category ORDER BY id;', (err, result) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve(
+        result.rows.map((category) => {
+          return {
+            id: category.id,
+            name: category.name,
+          };
+        })
+      );
+    });
   });
 
   const avatarPromise = new Promise((resolve, reject) => {
@@ -112,26 +135,7 @@ exports.getResourceV1 = (req, res) => {
     });
   });
 
-  const moodPromise = new Promise((resolve, reject) => {
-    postgres.query('SELECT * FROM music_mood ORDER BY id;', (err, result) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      resolve(
-        result.rows.map((mood) => {
-          return {
-            id: mood.id,
-            name: mood.name,
-            filePath: mood.file_path,
-          };
-        })
-      );
-    });
-  });
-
-  Promise.all([ambientPromise, backgroundPromise, backgroundCategoryPromise, musicPromise, avatarPromise, moodPromise])
+  Promise.all([ambientPromise, backgroundPromise, backgroundCategoryPromise, musicPromise, musicCategoryPromise, avatarPromise])
     .then((dataArr) => {
       res.json({
         statusCode: 2001,
@@ -140,8 +144,8 @@ exports.getResourceV1 = (req, res) => {
           background: dataArr[1],
           backgroundCategory: dataArr[2],
           music: dataArr[3],
-          avatar: dataArr[4],
-          mood: dataArr[5],
+          musicCategory: dataArr[4],
+          avatar: dataArr[5],
         },
       });
     })
