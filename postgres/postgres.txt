@@ -745,3 +745,31 @@ INSERT INTO music (music_name, artist_name, artist_link, file_path, thumbnail_fi
   ('Day Dream', 'pa_punnn', 'https://linktr.ee/pa_punnn', 'music/audio/mood/All Day Music_Day Dream.m4a', 'music/thumbnail/mood/All Day Music_Day Dream.jpg', TRUE),
   ('Late Night', 'pa_punnn', 'https://linktr.ee/pa_punnn', 'music/audio/mood/All Day Music_Late Night.m4a', 'music/thumbnail/mood/All Day Music_Late Night.jpg', TRUE),
   ('New Day', 'pa_punnn', 'https://linktr.ee/pa_punnn', 'music/audio/mood/All Day Music_New Day.m4a', 'music/thumbnail/mood/All Day Music_New Day.jpg', TRUE);
+
+ALTER TABLE ambient DROP COLUMN name_japanese;
+ALTER TABLE ambient DROP COLUMN icon_file_path;
+
+--- add Seasonal_BG011 ---
+
+INSERT INTO ambient(name, file_path, volume, white_icon_file_path, black_icon_file_path)
+	VALUES ('Fireworks', 'ambient/audio/Fireworks.m4a', 1.00, 'ambient/icon/Ambience Icon_White/Fireworks_White.svg', 'ambient/icon/Ambience Icon_Black/Fireworks_Black.svg');
+
+INSERT INTO background_category(name) VALUES ('Seasonal');
+
+INSERT INTO background (id, name,  artist_name, file_path, thumbnail_file_path, story_url, ambient_id_arr, is_member, category_id, is_top_hit) VALUES
+  ('Seasonal_BG0111', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0111.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0111.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0112', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0112.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0112.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0113', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0113.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0113.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0114', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0114.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0114.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0121', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0121.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0121.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0122', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0122.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0122.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0123', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0123.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0123.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0124', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0124.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0124.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0131', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0131.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0131.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0132', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0132.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0132.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0133', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0133.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0133.jpg', null, ARRAY[5,6,8,21], false, 4, true),
+  ('Seasonal_BG0134', 'Loy Krathong Festival', 'Checkpoint Originals', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_BG0134.mp4', 'BG/Seasonal_BG/Seasonal_BG01_1080p/Seasonal_TBG01/Seasonal_TBG0134.jpg', null, ARRAY[5,6,8,21], false, 4, true);
+
+UPDATE background SET is_top_hit = false WHERE id LIKE 'Pixel%';
+
+UPDATE member_setting SET background_id = 'Seasonal_BG0111';

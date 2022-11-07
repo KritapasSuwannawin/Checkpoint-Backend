@@ -27,7 +27,7 @@ exports.getResourceV1 = (req, res) => {
     postgres.query(
       `SELECT b.*, bc.name AS category_name, bvc.viewcount::integer AS view_count FROM background b
       INNER JOIN background_category bc ON b.category_id = bc.id
-      INNER JOIN "bg-viewcount" bvc ON b.id = bvc."BG_ID"
+      LEFT JOIN "bg-viewcount" bvc ON b.id = bvc."BG_ID"
       ORDER BY b.id;`,
       (err, result) => {
         if (err) {
