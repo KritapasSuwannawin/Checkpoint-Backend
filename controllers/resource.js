@@ -25,7 +25,10 @@ exports.getResourceV1 = (req, res) => {
 
   const backgroundPromise = new Promise((resolve, reject) => {
     postgres.query(
-      'SELECT b.*, bc.name AS category_name FROM background b INNER JOIN background_category bc ON b.category_id = bc.id ORDER BY b.id;',
+      `SELECT b.*, bc.name AS category_name, bvc.viewcount::integer AS view_count FROM background b
+      INNER JOIN background_category bc ON b.category_id = bc.id
+      INNER JOIN "bg-viewcount" bvc ON b.id = bvc."BG_ID"
+      ORDER BY b.id;`,
       (err, result) => {
         if (err) {
           reject(err);
@@ -46,6 +49,7 @@ exports.getResourceV1 = (req, res) => {
               categoryId: background.category_id,
               category: background.category_name,
               isTopHit: background.is_top_hit,
+              viewCount: background.view_count + 590,
             };
           })
         );
