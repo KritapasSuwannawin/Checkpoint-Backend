@@ -8,7 +8,12 @@ const adminRouterV1 = require('./route/adminRouteV1');
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+
+app.use(
+  cors({
+    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : 'http://localhost:3000',
+  })
+);
 
 app.use('/v1/resource', resourceRouterV1);
 app.use('/v1/member', memberRouterV1);
